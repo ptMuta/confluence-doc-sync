@@ -288,7 +288,8 @@ await step('read-scope-matrix', async () => {
     'v1 content search': `/rest/api/content/search?cql=${cql}`,
   }
   const result = {}
-  for (const [name, path] of Object.entries(endpoints)) result[name] = brief(await call(R, 'GET', path))
+  for (const [name, path] of Object.entries(endpoints))
+    result[name] = { read: brief(await call(R, 'GET', path)), write: brief(await call(W, 'GET', path)) }
   note('read-scope-matrix', result)
 })
 
