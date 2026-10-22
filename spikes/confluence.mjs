@@ -91,10 +91,10 @@ const strings = node => {
   return out
 }
 
-const replaceStrings = (node, from, to) =>
+const replaceStrings = (node, map) =>
   JSON.parse(JSON.stringify(node), (k, v) => {
     if (k === 'localId') return randomUUID()
-    return typeof v === 'string' && v === from ? to : v
+    return typeof v === 'string' && Object.hasOwn(map, v) ? map[v] : v
   })
 
 const crcTable = Array.from({ length: 256 }, (_, n) => {
@@ -346,8 +346,9 @@ await step('property-version', async () => {
 await step('attachments', async () => {
   const image = await upload(runPage.id, 'spike.png', png(64, 32, [37, 99, 235]), 'image/png')
   const diagramSample = sampleAttachments.find(a => /drawio|mxfile|xml/i.test(`${a.mediaType} ${a.title}`))
-  ctx.diagramName = diagramSample?.title?.includes('.') ? 'spike-diagram.drawio' : 'spike-diagram'
-  const diagram = await upload(runPage.id, ctx.diagramName, drawioXml, diagramSample?.mediaType ?? 'application/vnd.jgraph.mxfile')
+  const diagramName = diagramSample?.title?.includes('.') ? 'spike-diagram.drawio' : 'spike-diagram'
+  const diagram = await upload(runPage.id, diagramName, drawioXml, diagramSample?.mediaType ?? 'application/vnd.jgraph.mxfile')
+  if (diagram.status < 300) ctx.diagramName = diagramName
   const listed = await call(R, 'GET', `/api/v2/pages/${runPage.id}/attachments`)
   ctx.image = listed.body?.results?.find(a => a.title === 'spike.png')
   note('attachments', {
@@ -377,10 +378,26 @@ await step('body-update', async () => {
   const sampleNodes = []
   walk(sampleAdf ?? {}, n => /extension/i.test(n.type ?? '') && sampleNodes.push(n))
   const anchor = sampleNodes.find(n => strings(n).includes('test-anchor'))
-  if (anchor) content.push(para('Anchor copied from sample:'), replaceStrings(anchor, 'test-anchor', 'spike-anchor'))
+  if (anchor) content.push(para('Anchor copied from sample:'), replaceStrings(anchor, { 'test-anchor': 'spike-anchor' }))
   const diagramTitle = sampleAttachments.map(a => a.title).find(t => sampleNodes.some(n => strings(n).includes(t)))
   const drawio = sampleNodes.find(n => diagramTitle && strings(n).includes(diagramTitle))
-  if (drawio) content.push(para('draw.io macro copied from sample:'), replaceStrings(drawio, diagramTitle, ctx.diagramName))
+  if (drawio && ctx.diagramName) {
+    const name = ctx.diagramName
+    content.push(
+      para('draw.io macro copied from sample:'),
+      replaceStrings(drawio, { [diagramTitle]: name, [sample.id]: runPage.id }),
+      para('draw.io macro, minimal attributes:'),
+      {
+        type: 'extension',
+        attrs: {
+          layout: 'default',
+          extensionType: drawio.attrs.extensionType,
+          extensionKey: drawio.attrs.extensionKey,
+          parameters: { guestParams: { diagramName: name, diagramDisplayName: name, pageId: runPage.id } },
+        },
+      },
+    )
+  }
   const current = await call(R, 'GET', `/api/v2/pages/${runPage.id}`)
   const put = await call(W, 'PUT', `/api/v2/pages/${runPage.id}`, {
     json: {
