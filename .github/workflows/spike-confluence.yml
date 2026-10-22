@@ -28,7 +28,6 @@ jobs:
             -o confluence.mjs
       - name: Run spike
         env:
-          CONFLUENCE_CLOUD_ID: ${{ vars.CONFLUENCE_CLOUD_ID }}
           CONFLUENCE_SITE: ${{ vars.CONFLUENCE_SITE }}
           CONFLUENCE_SPIKE_EMAIL: ${{ vars.CONFLUENCE_SPIKE_EMAIL }}
           CONFLUENCE_TEST_SPACE: ${{ vars.CONFLUENCE_TEST_SPACE }}

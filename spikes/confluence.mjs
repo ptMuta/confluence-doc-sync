@@ -10,8 +10,7 @@ const required = name => {
 
 const cfg = {
   site: required('CONFLUENCE_SITE').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
-  pinnedCloudId: process.env.CONFLUENCE_CLOUD_ID ?? '',
-  email: required('CONFLUENCE_SPIKE_EMAIL'),
+  email: process.env.CONFLUENCE_SPIKE_EMAIL ?? '',
   readToken: required('CONFLUENCE_SPIKE_READ_TOKEN'),
   writeToken: required('CONFLUENCE_SPIKE_WRITE_TOKEN'),
   testSpace: required('CONFLUENCE_TEST_SPACE'),
@@ -28,7 +27,7 @@ const base = `https://api.atlassian.com/ex/confluence/${cloudId}/wiki`
 const R = cfg.readToken
 const W = cfg.writeToken
 const findings = []
-let authMode = 'basic'
+let authMode = cfg.email ? 'basic' : 'bearer'
 
 const note = (id, data) => {
   findings.push({ id, ...data })
@@ -178,7 +177,7 @@ const ctx = {}
 
 await step('auth', async () => {
   const result = {}
-  for (const mode of ['basic', 'bearer']) {
+  for (const mode of cfg.email ? ['basic', 'bearer'] : ['bearer']) {
     authMode = mode
     const r = await call(R, 'GET', `/api/v2/spaces?keys=${cfg.testSpace},${cfg.eaSpace}`)
     result[mode] = brief(r)
@@ -189,8 +188,7 @@ await step('auth', async () => {
       result.rateHeaders = r.rate
     }
   }
-  authMode = result.chosen ?? 'basic'
-  result.cloudId = { derivedFromSite: true, matchesPinned: cfg.pinnedCloudId ? cfg.pinnedCloudId === cloudId : null }
+  authMode = result.chosen ?? authMode
   note('auth', result)
   if (!dst || !ea) throw new Error('spaces not found; check keys and token')
   note('spaces', { dst: { id: dst.id, homepageId: dst.homepageId }, ea: { id: ea.id, homepageId: ea.homepageId } })
