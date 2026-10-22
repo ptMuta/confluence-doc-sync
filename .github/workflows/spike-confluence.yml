@@ -1,0 +1,41 @@
+name: spike-confluence
+
+on:
+  push:
+    branches: [claude/project-thread-1uhc1o]
+    paths: [spikes/**, .github/workflows/spike-confluence.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: spike-confluence
+  cancel-in-progress: false
+
+jobs:
+  spike:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Fetch spike script
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.raw" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/contents/spikes/confluence.mjs?ref=$GITHUB_SHA" \
+            -o confluence.mjs
+      - name: Run spike
+        env:
+          CONFLUENCE_CLOUD_ID: ${{ vars.CONFLUENCE_CLOUD_ID }}
+          CONFLUENCE_SITE: ${{ vars.CONFLUENCE_SITE }}
+          CONFLUENCE_SPIKE_EMAIL: ${{ vars.CONFLUENCE_SPIKE_EMAIL }}
+          CONFLUENCE_TEST_SPACE: ${{ vars.CONFLUENCE_TEST_SPACE }}
+          CONFLUENCE_EA_SPACE: ${{ vars.CONFLUENCE_EA_SPACE }}
+          CONFLUENCE_EA_FOLDER: ${{ vars.CONFLUENCE_EA_FOLDER }}
+          CONFLUENCE_SPIKE_READ_TOKEN: ${{ secrets.CONFLUENCE_SPIKE_READ_TOKEN }}
+          CONFLUENCE_SPIKE_WRITE_TOKEN: ${{ secrets.CONFLUENCE_SPIKE_WRITE_TOKEN }}
+        run: |
+          node --version
+          node confluence.mjs
