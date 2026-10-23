@@ -6,17 +6,16 @@
         <mxCell id="1" parent="0" />
         <mxCell id="users" value="Users" style="role=icon;icon=users;" vertex="1" parent="1"><mxGeometry x="40" y="170" width="56" height="56" as="geometry" /></mxCell>
         <mxCell id="cdn" value="CDN" style="role=icon;icon=world-www;" vertex="1" parent="1"><mxGeometry x="170" y="170" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="aws" value="AWS eu-west-1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="300" y="40" width="560" height="330" as="geometry" /></mxCell>
+        <mxCell id="aws" value="AWS eu-west-1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="300" y="40" width="560" height="380" as="geometry" /></mxCell>
         <mxCell id="gw" value="API gateway" style="role=icon;icon=api;" vertex="1" parent="aws"><mxGeometry x="30" y="130" width="56" height="56" as="geometry" /></mxCell>
         <mxCell id="fn" value="Functions" style="role=icon;icon=lambda;" vertex="1" parent="aws"><mxGeometry x="160" y="130" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="q" value="Queue" style="role=icon;icon=stack-2;" vertex="1" parent="aws"><mxGeometry x="290" y="60" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="db" value="Database" style="role=icon;icon=database;" vertex="1" parent="aws"><mxGeometry x="290" y="200" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="worker" value="Worker" style="role=icon;icon=cpu;" vertex="1" parent="aws"><mxGeometry x="430" y="60" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="kv" value="Secrets" style="role=icon;icon=key;" vertex="1" parent="aws"><mxGeometry x="430" y="200" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="gcp" value="Google Cloud europe-north1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="920" y="40" width="300" height="330" as="geometry" /></mxCell>
+        <mxCell id="q" value="Queue" style="role=icon;icon=stack-2;" vertex="1" parent="aws"><mxGeometry x="290" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="db" value="Database" style="role=icon;icon=database;" vertex="1" parent="aws"><mxGeometry x="160" y="260" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="worker" value="Worker" style="role=icon;icon=cpu;" vertex="1" parent="aws"><mxGeometry x="430" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="kv" value="Secrets" style="role=icon;icon=key;" vertex="1" parent="aws"><mxGeometry x="430" y="260" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="gcp" value="Google Cloud europe-north1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="920" y="40" width="300" height="380" as="geometry" /></mxCell>
         <mxCell id="lake" value="Storage" style="role=icon;icon=bucket;" vertex="1" parent="gcp"><mxGeometry x="40" y="130" width="56" height="56" as="geometry" /></mxCell>
         <mxCell id="bi" value="Analytics" style="role=icon;icon=chart-dots;" vertex="1" parent="gcp"><mxGeometry x="190" y="130" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="mon" value="Monitoring" style="role=icon;icon=activity-heartbeat;" vertex="1" parent="1"><mxGeometry x="960" y="420" width="56" height="56" as="geometry" /></mxCell>
         <mxCell id="c1" value="" style="role=flow;" edge="1" parent="1" source="users" target="cdn"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="c2" value="" style="role=flow;" edge="1" parent="1" source="cdn" target="gw"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="c3" value="" style="role=flow;" edge="1" parent="1" source="gw" target="fn"><mxGeometry relative="1" as="geometry" /></mxCell>
