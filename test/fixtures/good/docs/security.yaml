@@ -1,0 +1,6 @@
+- id: SEC-001
+  control: Data stores accept traffic only from private endpoints.
+  applies-to: [modules/ledger]
+  enforced-by: policy/no-secrets.rego
+  requirement: [NFR-SEC-004]
+  tags: [qa-security]

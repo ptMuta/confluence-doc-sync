@@ -17,10 +17,16 @@
     "verify": "npm run typecheck && npm run lint && npm run format && npm run test && npm run knip && npm run build"
   },
   "dependencies": {
-    "@actions/core": "3.0.1"
+    "@actions/core": "3.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@types/mdast": "4.0.4",
     "@types/node": "24.19.2",
     "@vitest/coverage-v8": "5.0.5",
     "esbuild": "0.28.2",

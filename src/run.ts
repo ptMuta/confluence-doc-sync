@@ -1,12 +1,13 @@
 import * as core from '@actions/core'
-import { parseInputs, type Mode } from './inputs.ts'
+import { check } from './check.ts'
+import { parseInputs, type Inputs, type Mode } from './inputs.ts'
+import { report } from './report.ts'
 
 const notYet = (mode: Mode) => () => Promise.reject(new Error(`Mode "${mode}" is not implemented yet`))
 
-const handlers: Record<Mode, () => Promise<void>> = {
-  check: () => {
-    core.info('No checks are implemented yet.')
-    return Promise.resolve()
+const handlers: Record<Mode, (inputs: Inputs) => Promise<void>> = {
+  check: async inputs => {
+    await report(await check(process.cwd(), inputs.config))
   },
   plan: notYet('plan'),
   publish: notYet('publish'),
@@ -15,7 +16,7 @@ const handlers: Record<Mode, () => Promise<void>> = {
 export async function run(): Promise<void> {
   try {
     const inputs = parseInputs(name => core.getInput(name), core.setSecret)
-    await handlers[inputs.mode]()
+    await handlers[inputs.mode](inputs)
   } catch (error) {
     core.setFailed(error instanceof Error ? error.message : String(error))
   }

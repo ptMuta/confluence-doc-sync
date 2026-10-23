@@ -1,0 +1,15 @@
+system: Payments
+confluence:
+  site: example.atlassian.net
+  space: DOCS
+  root-page: 123456
+tags:
+  vocabulary: shared/tags.yaml
+reference-sources:
+  ea:
+    type: confluence
+    space: ARCH
+    folder: Architecture/External decisions
+    id-pattern: 'ADR-\d{3,4}'
+    lifecycle:
+      superseded: { folder: Superseded }

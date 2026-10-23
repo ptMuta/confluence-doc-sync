@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const inputs: Record<string, string> = {}
@@ -6,6 +7,8 @@ const core = vi.hoisted(() => ({
   setSecret: vi.fn(),
   setFailed: vi.fn(),
   info: vi.fn(),
+  error: vi.fn(),
+  warning: vi.fn(),
 }))
 vi.mock('@actions/core', () => core)
 
@@ -18,11 +21,15 @@ describe('run', () => {
     core.getInput.mockImplementation((name: string) => inputs[name] ?? '')
   })
 
-  it('runs check', async () => {
+  it.each([
+    ['good', undefined],
+    ['bad', expect.stringMatching(/^Docs check found \d+ errors$/)],
+  ])('runs check on the %s sample repo', async (name, failure) => {
+    vi.spyOn(process, 'cwd').mockReturnValue(join(import.meta.dirname, 'fixtures', name))
     inputs['mode'] = 'check'
     await run()
-    expect(core.setFailed).not.toHaveBeenCalled()
-    expect(core.info).toHaveBeenCalledOnce()
+    if (failure) expect(core.setFailed).toHaveBeenCalledWith(failure)
+    else expect(core.setFailed).not.toHaveBeenCalled()
   })
 
   it.each(['plan', 'publish'])('fails %s until it exists', async mode => {

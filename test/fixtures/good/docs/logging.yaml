@@ -1,0 +1,5 @@
+- id: LOG-001
+  events: [payment.created]
+  fields: [payment_id, amount]
+  destination: Central log workspace
+  retention: 90 days

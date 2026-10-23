@@ -1,0 +1,8 @@
+- id: FR-001
+  statement: The service shall record every payment in the ledger and keep it for seven years.
+  priority: must
+  verification: tests/missing.rego
+- id: FR-001
+  statement: The service shall send receipts.
+  priority: should
+  verification: mailto:qa@example.com
