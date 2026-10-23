@@ -25,7 +25,7 @@ jobs:
     environment: docs-sync-approve
     permissions:
       contents: read
-      actions: read
+      actions: read # download the plan artifact
     steps:
       - name: Check the plan run
         id: run
@@ -53,7 +53,7 @@ jobs:
           RUN_ID: ${{ inputs.run-id }}
           REPO: ${{ github.repository }}
         run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
-      - uses: ptMuta/git-confluence-sync@0000000000000000000000000000000000000000 # pin to a release commit
+      - uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: publish
           confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
