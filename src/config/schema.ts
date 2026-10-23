@@ -48,6 +48,7 @@ export const configSchema = z.strictObject({
   approval: z.enum(['none', 'always', 'on-risk']).default('on-risk'),
   approvers: z.array(z.string().trim().min(1)).default([]),
   'diagram-output': z.enum(['image', 'macro']).default('image'),
+  theme: repoPath.optional(),
   docs: repoPath.default('docs'),
   decisions: z
     .strictObject({

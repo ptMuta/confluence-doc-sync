@@ -1,1 +1,66 @@
-<mxfile><diagram name="Network"><mxGraphModel><root><mxCell id="0"/></root></mxGraphModel></diagram></mxfile>
+<mxfile>
+  <diagram id="showcase" name="Payments platform">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" page="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="customer" value="Customer" style="role=actor;" vertex="1" parent="1">
+          <mxGeometry x="40" y="185" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="zone" value="Azure subscription: payments-prod" style="role=zone;" vertex="1" parent="1">
+          <mxGeometry x="140" y="40" width="640" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="waf" value="Web application firewall" style="role=control;" vertex="1" parent="zone">
+          <mxGeometry x="30" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="private" value="Private network" style="role=boundary;" vertex="1" parent="zone">
+          <mxGeometry x="190" y="50" width="420" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="Payments API" style="role=service;" vertex="1" parent="private">
+          <mxGeometry x="30" y="60" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="events" value="Payment events" style="role=queue;" vertex="1" parent="private">
+          <mxGeometry x="250" y="65" width="140" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="worker" value="Ledger worker" style="role=service;" vertex="1" parent="private">
+          <mxGeometry x="250" y="190" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="Ledger database" style="role=data-store;" vertex="1" parent="private">
+          <mxGeometry x="45" y="175" width="110" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="cards" value="Card network" style="role=external;" vertex="1" parent="1">
+          <mxGeometry x="840" y="120" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="Keys rotate every 90 days" style="role=note;" vertex="1" parent="1">
+          <mxGeometry x="840" y="300" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="caption" value="All traffic between zones uses TLS 1.2 or later." style="role=text;" vertex="1" parent="1">
+          <mxGeometry x="140" y="430" width="400" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="HTTPS" edge="1" parent="1" source="customer" target="waf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="waf" target="api">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="payment.created" style="role=flow-async;" edge="1" parent="1" source="api" target="events">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="role=flow-async;" edge="1" parent="1" source="events" target="worker">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="Write" edge="1" parent="1" source="worker" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="Authorize" edge="1" parent="1" source="api" target="cards">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="70" />
+              <mxPoint x="910" y="70" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
