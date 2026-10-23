@@ -172,6 +172,28 @@ roles:
     gradientColor: none
     fillStyle: solid
     fontStyle: "0"
+  icon:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+    fontStyle: "0"
+  device:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+    fillColor: "#A5D8FF"
+    strokeColor: "#1971C2"
+    sketch: "1"
+    curveFitting: "1"
+    jiggle: "2"
+    shadow: "0"
+    gradientColor: none
+    fillStyle: solid
+    fontStyle: "0"
   text:
     text: ""
     whiteSpace: wrap

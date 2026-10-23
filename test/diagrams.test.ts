@@ -62,11 +62,22 @@ describe('prepare', () => {
       'diagrams/unsafe Cell a: link "javascript:alert(1)" must use https',
       'diagrams/style Cell a: the theme replaces fillColor',
       'diagrams/role Cell b: set a role in its style, e.g. role=service',
-      'diagrams/unsafe Cell b: images must be embedded PNG, JPEG, GIF or WebP data',
+      'diagrams/unsafe Cell b: images must be embedded PNG, JPEG, GIF or WebP data, or built-in draw.io icons',
       'diagrams/role Cell c: unknown role "wizard"',
     ])
     expect(xml).not.toMatch(/onerror|onload|javascript|evil\.example|<img/)
     expect(xml).toContain('value="Bold"')
+  })
+
+  it('allows built-in draw.io icons only', () => {
+    const images = ['img/lib/azure2/compute/Function_Apps.svg', 'img/lib/../../etc/x.svg', 'file:///img/lib/a.svg']
+    const [page] = parseDrawio(
+      `<mxGraphModel><root>${images.map((image, index) => `<mxCell id="${String(index)}" style="role=icon;image=${image};" vertex="1" parent="1"/>`).join('')}</root></mxGraphModel>`,
+    )
+    if (!page) throw new Error('no page')
+    const { xml, problems } = prepare(page, defaultTheme)
+    expect(problems.map(problem => problem.message.slice(0, 7))).toEqual(['Cell 1:', 'Cell 2:'])
+    expect(xml).toContain('Function_Apps.svg')
   })
 
   it('keeps https links and decodes HTML labels', () => {

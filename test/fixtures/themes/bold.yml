@@ -131,6 +131,20 @@ roles:
     strokeColor: "#FACC15"
     fontColor: "#422006"
     align: left
+  icon:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+  device:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+    fillColor: "#4F46E5"
+    strokeColor: "#FFFFFF"
   text:
     text: ""
     whiteSpace: wrap

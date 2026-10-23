@@ -34,7 +34,7 @@ const modelAttrs = [
 
 const managed = ['fontFamily', 'fontSize', 'fontColor']
 
-const safeImage = /^data:image\/(?:png|jpeg|gif|webp)[,;]/
+const safeImage = /^data:image\/(?:png|jpeg|gif|webp)[,;]|^img\/lib\/[\w/-]+\.svg$/
 
 function geometry(node: XNode): string {
   const allowed = geometryAttrs[node.tag]
@@ -88,7 +88,11 @@ function prepareCell(cell: Cell, theme: Theme, problems: Problem[]): string {
   if (cell.html && scripted(cell.value)) problem('diagrams/unsafe', 'error', 'label has script content')
   const image = style.get('image')
   if (image !== undefined && !safeImage.test(image)) {
-    problem('diagrams/unsafe', 'error', 'images must be embedded PNG, JPEG, GIF or WebP data')
+    problem(
+      'diagrams/unsafe',
+      'error',
+      'images must be embedded PNG, JPEG, GIF or WebP data, or built-in draw.io icons',
+    )
     style.delete('image')
   }
   if (cell.link !== undefined && !cell.link.startsWith('https://'))

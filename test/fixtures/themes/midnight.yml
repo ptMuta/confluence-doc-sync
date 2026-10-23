@@ -131,6 +131,22 @@ roles:
     strokeColor: "#F9E2AF"
     fontColor: "#1E1E2E"
     align: left
+  icon:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+    fontColor: "#CDD6F4"
+  device:
+    aspect: fixed
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    align: center
+    whiteSpace: wrap
+    fillColor: "#313244"
+    strokeColor: "#89B4FA"
+    fontColor: "#CDD6F4"
   text:
     text: ""
     whiteSpace: wrap
