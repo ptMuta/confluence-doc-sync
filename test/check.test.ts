@@ -132,6 +132,35 @@ describe('check', () => {
     expect(await rules({ [config]: base, 'docs/a.md': page })).toEqual(['markdown/link', 'markdown/diagram'])
   })
 
+  it('loads a custom theme and renders diagrams', async () => {
+    const themed = `${base}theme: theme.yaml\n`
+    const theme =
+      'version: 1\nbackground: "#FFFFFF"\nfont: { family: Inter, size: 12, color: "#000000" }\nroles:\n  box: { rounded: 1 }\n'
+    const diagram = (role: string) =>
+      `<mxGraphModel><root><mxCell id="0"/><mxCell id="a" style="role=${role};" vertex="1" parent="0"/></root></mxGraphModel>`
+    const page = '---\ntitle: Page\n---\n\n![Box](a.drawio "Box")\n'
+    const files = { [config]: themed, 'theme.yaml': theme, 'docs/page.md': page }
+    expect(await rules({ ...files, 'docs/a.drawio': diagram('box') })).toEqual([])
+    expect(await rules({ ...files, 'docs/a.drawio': diagram('service') })).toEqual(['diagrams/role'])
+    expect(await rules({ [config]: themed })).toEqual(['config'])
+    expect(await rules({ [config]: themed, 'theme.yaml': 'version: [' })).toEqual(['yaml'])
+    expect(await rules({ [config]: themed, 'theme.yaml': 'version: 1' })).toEqual(['schema', 'schema', 'schema'])
+    const fail = () => Promise.reject(new Error('boom'))
+    const root = await repo({ [config]: base, 'docs/page.md': page, 'docs/a.drawio': diagram('service') })
+    expect((await check(root, config, fail)).map(f => f.message)).toEqual(['boom'])
+    const twoPages = `<mxfile><diagram>${diagram('service')}</diagram><diagram>${diagram('service')}</diagram></mxfile>`
+    expect(await rules({ [config]: base, 'docs/page.md': page, 'docs/a.drawio': twoPages })).toEqual(['diagrams/pages'])
+  })
+
+  it('allows large diagrams up to the configured limit', async () => {
+    const image = `data:image/png,${'A'.repeat(1_200_000)}`
+    const big = `<mxGraphModel><root><mxCell id="0"/><mxCell id="a" style="role=service;image=${image};" vertex="1" parent="0"/></root></mxGraphModel>`
+    const page = '---\ntitle: Page\n---\n\n![Big](a.drawio "Big")\n'
+    expect(await rules({ [config]: base, 'docs/page.md': page, 'docs/a.drawio': big })).toEqual([])
+    const small = `${base}diagram-max-mb: 1\n`
+    expect(await rules({ [config]: small, 'docs/page.md': page, 'docs/a.drawio': big })).toEqual(['diagrams/parse'])
+  })
+
   it('reports the built-in secret patterns', async () => {
     const samples = [
       ['AKIA', 'ABCDEFGHIJKLMNOP'],

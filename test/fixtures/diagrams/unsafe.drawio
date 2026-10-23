@@ -1,0 +1,21 @@
+<mxfile>
+  <diagram id="unsafe" name="Unsafe">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <UserObject label="&lt;b&gt;Bold&lt;/b&gt;&lt;br&gt;&lt;img src=x onerror=alert(1)&gt;" link="javascript:alert(1)" id="a">
+          <mxCell style="role=service;html=1;fillColor=#FF0000;" vertex="1" parent="1">
+            <mxGeometry x="10" y="10" width="120" height="60" as="geometry" onload="x" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="b" value="Logo" style="shape=image;image=https://evil.example/x.png;" vertex="1" parent="1">
+          <mxGeometry x="200" y="10" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c" value="Mystery" style="role=wizard;" vertex="1" parent="1">
+          <mxGeometry x="300" y="10" width="60" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

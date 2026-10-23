@@ -110,6 +110,13 @@ exports[`check > reports every rule with file and line on the bad sample repo 1`
   {
     "file": "docs/diagrams/orphan.drawio",
     "line": 1,
+    "message": "The file has no draw.io pages",
+    "rule": "diagrams/parse",
+    "severity": "error",
+  },
+  {
+    "file": "docs/diagrams/orphan.drawio",
+    "line": 1,
     "message": "No page embeds this diagram",
     "rule": "diagrams/unembedded",
     "severity": "error",

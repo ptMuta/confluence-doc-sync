@@ -1,8 +1,6 @@
 import { lstat, readdir, readFile, realpath } from 'node:fs/promises'
 import { join, relative, sep } from 'node:path'
 
-const maxBytes = 1_000_000
-
 const missing = (cause: unknown) => cause instanceof Error && 'code' in cause && cause.code === 'ENOENT'
 
 async function inside(root: string, path: string): Promise<void> {
@@ -11,7 +9,7 @@ async function inside(root: string, path: string): Promise<void> {
     throw new Error(`${relative(root, path)} is outside the repository`)
 }
 
-export async function readText(root: string, file: string): Promise<string | undefined> {
+export async function readText(root: string, file: string, maxBytes = 1_000_000): Promise<string | undefined> {
   const path = join(root, file)
   let stat
   try {
