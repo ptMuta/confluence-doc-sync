@@ -18,7 +18,7 @@ RUN sed -i -e "s#http://deb.debian.org/debian-security#http://snapshot.debian.or
     "https://github.com/jgraph/drawio-desktop/releases/download/v${DRAWIO_VERSION}/drawio-amd64-${DRAWIO_VERSION}.deb" \
  && echo "${DRAWIO_SHA256}  /tmp/drawio.deb" | sha256sum -c - \
  && apt-get update \
- && apt-get install -y --no-install-recommends /tmp/drawio.deb xvfb xauth fonts-inter fonts-dejavu-core \
+ && apt-get install -y --no-install-recommends /tmp/drawio.deb libasound2t64 libgbm1 xvfb xauth fonts-inter fonts-dejavu-core \
  && rm -rf /var/lib/apt/lists/* /tmp/drawio.deb \
  && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* \
  && useradd --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin render
