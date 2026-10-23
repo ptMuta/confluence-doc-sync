@@ -1,0 +1,60 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderPages > matches the golden ADF for every page 1`] = `
+[
+  [
+    "docs/overview.md",
+    "Payments overview",
+    "-",
+    "system-payments",
+  ],
+  [
+    "docs/decisions",
+    "Payments: Decisions",
+    "-",
+    "",
+  ],
+  [
+    "docs/decisions/DEC-0001-public-endpoints.md",
+    "DEC-0001 Use public endpoints with IP allow lists",
+    "docs/decisions",
+    "",
+  ],
+  [
+    "docs/decisions/DEC-0002-private-endpoints.md",
+    "DEC-0002 Use private endpoints for all data stores",
+    "docs/decisions",
+    "ea-adr-007 ea-adr-012 qa-security",
+  ],
+  [
+    "docs/requirements.yaml",
+    "Payments: Requirements",
+    "-",
+    "ea-adr-031",
+  ],
+  [
+    "docs/security.yaml",
+    "Payments: Security controls",
+    "-",
+    "qa-security",
+  ],
+  [
+    "docs/logging.yaml",
+    "Payments: Logging",
+    "-",
+    "",
+  ],
+  [
+    "docs/monitoring.yaml",
+    "Payments: Monitoring use cases",
+    "-",
+    "",
+  ],
+  [
+    "coverage",
+    "Payments: Upstream decisions",
+    "-",
+    "",
+  ],
+]
+`;

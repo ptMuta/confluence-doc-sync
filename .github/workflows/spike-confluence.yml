@@ -2,6 +2,12 @@ name: spike-confluence
 
 on:
   workflow_dispatch:
+    inputs:
+      script:
+        description: Script to run
+        type: choice
+        options: [confluence, adf-check]
+        default: confluence
 
 permissions:
   contents: read
@@ -16,17 +22,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Fetch spike script
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          curl -fsSL \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github.raw" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/contents/spikes/confluence.mjs?ref=$GITHUB_SHA" \
-            -o confluence.mjs
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
       - name: Run spike
         env:
+          SCRIPT: ${{ inputs.script }}
           CONFLUENCE_SITE: ${{ vars.CONFLUENCE_SITE }}
           CONFLUENCE_SPIKE_EMAIL: ${{ vars.CONFLUENCE_SPIKE_EMAIL }}
           CONFLUENCE_TEST_SPACE: ${{ vars.CONFLUENCE_TEST_SPACE }}
@@ -36,4 +37,4 @@ jobs:
           CONFLUENCE_SPIKE_WRITE_TOKEN: ${{ secrets.CONFLUENCE_SPIKE_WRITE_TOKEN }}
         run: |
           node --version
-          node confluence.mjs
+          node "spikes/$SCRIPT.mjs"
