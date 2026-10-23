@@ -1,0 +1,31 @@
+name: git-confluence-sync
+description: Check structured repository docs and publish them to Confluence Cloud.
+inputs:
+  mode:
+    description: check, plan or publish
+    required: true
+  config:
+    description: Path to the config file
+    default: .docs-sync/config.yaml
+  confluence-token:
+    description: Scoped Confluence API token (plan, publish)
+  bundle-path:
+    description: Where the plan bundle is written or read (plan, publish)
+  expected-bundle-sha256:
+    description: Bundle hash from the plan job (publish)
+  environment-tier:
+    description: Tier set per environment by an admin (publish)
+  ownership-key:
+    description: HMAC key for page ownership markers (publish)
+outputs:
+  bundle-path:
+    description: Path of the written plan bundle
+  bundle-sha256:
+    description: SHA-256 of the plan bundle
+  has-changes:
+    description: Whether the plan changes Confluence
+  risk:
+    description: low or high
+runs:
+  using: docker
+  image: Dockerfile

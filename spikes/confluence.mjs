@@ -9,14 +9,18 @@ const required = name => {
 }
 
 const cfg = {
-  site: required('CONFLUENCE_SITE').replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+  site: required('CONFLUENCE_SITE')
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, ''),
   email: process.env.CONFLUENCE_SPIKE_EMAIL ?? '',
   readToken: required('CONFLUENCE_SPIKE_READ_TOKEN'),
   writeToken: required('CONFLUENCE_SPIKE_WRITE_TOKEN'),
   testSpace: required('CONFLUENCE_TEST_SPACE'),
   eaSpace: required('CONFLUENCE_EA_SPACE'),
   eaFolder: process.env.CONFLUENCE_EA_FOLDER ?? '',
-  run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}` : String(Date.now()),
+  run: process.env.GITHUB_RUN_ID
+    ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}`
+    : String(Date.now()),
 }
 
 if (!/^[a-z0-9-]+\.atlassian\.net$/.test(cfg.site)) throw new Error('CONFLUENCE_SITE must look like name.atlassian.net')
@@ -35,9 +39,7 @@ const note = (id, data) => {
 }
 
 const authHeader = token =>
-  authMode === 'bearer'
-    ? `Bearer ${token}`
-    : `Basic ${Buffer.from(`${cfg.email}:${token}`).toString('base64')}`
+  authMode === 'bearer' ? `Bearer ${token}` : `Basic ${Buffer.from(`${cfg.email}:${token}`).toString('base64')}`
 
 async function call(token, method, path, { json, form, headers = {} } = {}) {
   const res = await fetch(base + path, {
@@ -63,9 +65,7 @@ async function call(token, method, path, { json, form, headers = {} } = {}) {
 }
 
 const errorText = body =>
-  typeof body === 'string'
-    ? body
-    : JSON.stringify(body?.errors ?? body?.message ?? body?.title ?? body).slice(0, 300)
+  typeof body === 'string' ? body : JSON.stringify(body?.errors ?? body?.message ?? body?.title ?? body).slice(0, 300)
 
 const brief = r => (r.status < 300 ? { status: r.status } : { status: r.status, error: errorText(r.body) })
 
@@ -151,7 +151,11 @@ async function upload(pageId, name, data, type) {
 }
 
 async function findPage(spaceId, title) {
-  const r = await call(R, 'GET', `/api/v2/pages?space-id=${spaceId}&title=${encodeURIComponent(title)}&body-format=atlas_doc_format`)
+  const r = await call(
+    R,
+    'GET',
+    `/api/v2/pages?space-id=${spaceId}&title=${encodeURIComponent(title)}&body-format=atlas_doc_format`,
+  )
   return r.body?.results?.[0]
 }
 
@@ -159,11 +163,19 @@ async function ensurePage(token, space, parentId, title, labels = []) {
   const existing = await findPage(space.id, title)
   if (existing) return existing.id
   const r = await call(token, 'POST', '/api/v2/pages', {
-    json: { spaceId: space.id, status: 'current', title, parentId, body: adfBody([para(`${title}. Fixture created by the docs-sync spike.`)]) },
+    json: {
+      spaceId: space.id,
+      status: 'current',
+      title,
+      parentId,
+      body: adfBody([para(`${title}. Fixture created by the docs-sync spike.`)]),
+    },
   })
   if (r.status >= 300) throw new Error(`create ${title}: ${errorText(r.body)}`)
   if (labels.length)
-    await call(token, 'POST', `/rest/api/content/${r.body.id}/label`, { json: labels.map(name => ({ prefix: 'global', name })) })
+    await call(token, 'POST', `/rest/api/content/${r.body.id}/label`, {
+      json: labels.map(name => ({ prefix: 'global', name })),
+    })
   return r.body.id
 }
 
@@ -195,7 +207,10 @@ await step('auth', async () => {
 })
 
 if (!dst || !ea) {
-  appendFileSync(process.env.GITHUB_STEP_SUMMARY ?? '/dev/null', 'Spike stopped: authentication or space lookup failed. See log.\n')
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY ?? '/dev/null',
+    'Spike stopped: authentication or space lookup failed. See log.\n',
+  )
   process.exit(1)
 }
 
@@ -217,7 +232,10 @@ const folderTree = async (id, depth = 0) => {
 
 await step('ea-folder', async () => {
   if (!cfg.eaFolder) return note('ea-folder', { skipped: 'no CONFLUENCE_EA_FOLDER' })
-  const [first, ...rest] = cfg.eaFolder.split('/').map(s => s.trim()).filter(Boolean)
+  const [first, ...rest] = cfg.eaFolder
+    .split('/')
+    .map(s => s.trim())
+    .filter(Boolean)
   const cql = encodeURIComponent(`space="${cfg.eaSpace}" and type=folder and title="${first}"`)
   const search = await call(R, 'GET', `/rest/api/search?cql=${cql}`)
   const candidates = search.body?.results?.map(x => x.content?.id).filter(Boolean) ?? []
@@ -266,7 +284,13 @@ await step('sample-page', async () => {
   sampleAttachments = att.body?.results ?? []
   note('sample-page', {
     nodes,
-    attachments: sampleAttachments.map(a => ({ title: a.title, mediaType: a.mediaType, fileId: a.fileId, fileSize: a.fileSize, comment: a.comment })),
+    attachments: sampleAttachments.map(a => ({
+      title: a.title,
+      mediaType: a.mediaType,
+      fileId: a.fileId,
+      fileSize: a.fileSize,
+      comment: a.comment,
+    })),
   })
 })
 
@@ -296,7 +320,13 @@ await step('read-scope-matrix', async () => {
 await step('create-and-titles', async () => {
   const title = `Spike run ${cfg.run}`
   const r = await call(W, 'POST', '/api/v2/pages', {
-    json: { spaceId: dst.id, status: 'current', title, parentId: dst.homepageId, body: adfBody([para('Created by the docs-sync spike.')]) },
+    json: {
+      spaceId: dst.id,
+      status: 'current',
+      title,
+      parentId: dst.homepageId,
+      body: adfBody([para('Created by the docs-sync spike.')]),
+    },
   })
   if (r.status >= 300) throw new Error(`create: ${errorText(r.body)}`)
   runPage = r.body
@@ -307,7 +337,13 @@ await step('create-and-titles', async () => {
     ea.id === dst.id
       ? { status: 0, body: 'skipped: external decisions share the test space' }
       : await call(W, 'POST', '/api/v2/pages', {
-          json: { spaceId: ea.id, status: 'current', title, parentId: ea.homepageId, body: adfBody([para('duplicate in other space')]) },
+          json: {
+            spaceId: ea.id,
+            status: 'current',
+            title,
+            parentId: ea.homepageId,
+            body: adfBody([para('duplicate in other space')]),
+          },
         })
   note('create-and-titles', {
     created: { id: runPage.id, version: runPage.version?.number, webui: runPage._links?.webui },
@@ -330,7 +366,11 @@ await step('property-version', async () => {
   const afterCreate = await version()
   const updated = created.body?.id
     ? await call(W, 'PUT', `/api/v2/pages/${runPage.id}/properties/${created.body.id}`, {
-        json: { key: 'docs-sync', value: { source: 'docs/spike.md', hash: 'sha256:test2' }, version: { number: created.body.version.number + 1 } },
+        json: {
+          key: 'docs-sync',
+          value: { source: 'docs/spike.md', hash: 'sha256:test2' },
+          version: { number: created.body.version.number + 1 },
+        },
       })
     : null
   const afterUpdate = await version()
@@ -347,12 +387,23 @@ await step('attachments', async () => {
   const image = await upload(runPage.id, 'spike.png', png(64, 32, [37, 99, 235]), 'image/png')
   const diagramSample = sampleAttachments.find(a => /drawio|mxfile|xml/i.test(`${a.mediaType} ${a.title}`))
   const diagramName = diagramSample?.title?.includes('.') ? 'spike-diagram.drawio' : 'spike-diagram'
-  const diagram = await upload(runPage.id, diagramName, drawioXml, diagramSample?.mediaType ?? 'application/vnd.jgraph.mxfile')
+  const diagram = await upload(
+    runPage.id,
+    diagramName,
+    drawioXml,
+    diagramSample?.mediaType ?? 'application/vnd.jgraph.mxfile',
+  )
   if (diagram.status < 300) ctx.diagramName = diagramName
   const listed = await call(R, 'GET', `/api/v2/pages/${runPage.id}/attachments`)
   ctx.image = listed.body?.results?.find(a => a.title === 'spike.png')
   note('attachments', {
-    v1Image: { ...brief(image), result: image.body?.results?.[0] && { id: image.body.results[0].id, extensions: image.body.results[0].extensions } },
+    v1Image: {
+      ...brief(image),
+      result: image.body?.results?.[0] && {
+        id: image.body.results[0].id,
+        extensions: image.body.results[0].extensions,
+      },
+    },
     v1Diagram: { ...brief(diagram), mediaTypeUsed: diagramSample?.mediaType ?? 'application/vnd.jgraph.mxfile' },
     v2Listing: (listed.body?.results ?? []).map(a => ({ title: a.title, mediaType: a.mediaType, fileId: a.fileId })),
   })
@@ -360,11 +411,18 @@ await step('attachments', async () => {
 
 await step('labels', async () => {
   const add = await call(W, 'POST', `/rest/api/content/${runPage.id}/label`, {
-    json: [{ prefix: 'global', name: 'ea-adr-001' }, { prefix: 'global', name: 'docs-sync' }],
+    json: [
+      { prefix: 'global', name: 'ea-adr-001' },
+      { prefix: 'global', name: 'docs-sync' },
+    ],
   })
   const read = await call(R, 'GET', `/api/v2/pages/${runPage.id}/labels`)
   const remove = await call(W, 'DELETE', `/rest/api/content/${runPage.id}/label/docs-sync`)
-  note('labels', { addV1: brief(add), readV2: { ...brief(read), names: read.body?.results?.map(l => l.name) }, removeV1: brief(remove) })
+  note('labels', {
+    addV1: brief(add),
+    readV2: { ...brief(read), names: read.body?.results?.map(l => l.name) },
+    removeV1: brief(remove),
+  })
 })
 
 await step('body-update', async () => {
@@ -373,12 +431,18 @@ await step('body-update', async () => {
     content.push({
       type: 'mediaSingle',
       attrs: { layout: 'center' },
-      content: [{ type: 'media', attrs: { type: 'file', id: ctx.image.fileId, collection: `contentId-${runPage.id}`, width: 64, height: 32 } }],
+      content: [
+        {
+          type: 'media',
+          attrs: { type: 'file', id: ctx.image.fileId, collection: `contentId-${runPage.id}`, width: 64, height: 32 },
+        },
+      ],
     })
   const sampleNodes = []
   walk(sampleAdf ?? {}, n => /extension/i.test(n.type ?? '') && sampleNodes.push(n))
   const anchor = sampleNodes.find(n => strings(n).includes('test-anchor'))
-  if (anchor) content.push(para('Anchor copied from sample:'), replaceStrings(anchor, { 'test-anchor': 'spike-anchor' }))
+  if (anchor)
+    content.push(para('Anchor copied from sample:'), replaceStrings(anchor, { 'test-anchor': 'spike-anchor' }))
   const diagramTitle = sampleAttachments.map(a => a.title).find(t => sampleNodes.some(n => strings(n).includes(t)))
   const drawio = sampleNodes.find(n => diagramTitle && strings(n).includes(diagramTitle))
   if (drawio && ctx.diagramName) {
@@ -423,7 +487,13 @@ await step('body-update', async () => {
 
 await step('move', async () => {
   const child = await call(W, 'POST', '/api/v2/pages', {
-    json: { spaceId: dst.id, status: 'current', title: `Spike child ${cfg.run}`, parentId: runPage.id, body: adfBody([para('child')]) },
+    json: {
+      spaceId: dst.id,
+      status: 'current',
+      title: `Spike child ${cfg.run}`,
+      parentId: runPage.id,
+      body: adfBody([para('child')]),
+    },
   })
   if (child.status >= 300) throw new Error(`create child: ${errorText(child.body)}`)
   ctx.child = child.body.id
@@ -440,7 +510,12 @@ await step('move', async () => {
     },
   })
   const after = await call(R, 'GET', `/api/v2/pages/${ctx.child}`)
-  note('move', { v1Move: brief(v1), v2ParentChange: brief(v2), parentAfter: after.body?.parentId, expectedV2Parent: runPage.id })
+  note('move', {
+    v1Move: brief(v1),
+    v2ParentChange: brief(v2),
+    parentAfter: after.body?.parentId,
+    expectedV2Parent: runPage.id,
+  })
 })
 
 await step('archive', async () => {
@@ -475,7 +550,9 @@ await step('ea-resolution', async () => {
     titleContains: `space="${cfg.eaSpace}" and type=page and title ~ "${realId}"`,
     prefixAmbiguity: `space="${cfg.eaSpace}" and type=page and title ~ "ADR-901"`,
     byLabel: `space="${cfg.eaSpace}" and type=page and label = "superseded"`,
-    ...(ctx.folder ? { inFolderNested: `space="${cfg.eaSpace}" and type=page and ancestor = ${ctx.folder} and title ~ "${realId}"` } : {}),
+    ...(ctx.folder
+      ? { inFolderNested: `space="${cfg.eaSpace}" and type=page and ancestor = ${ctx.folder} and title ~ "${realId}"` }
+      : {}),
   }
   const result = { decisionsInTree: decisions }
   for (const [name, q] of Object.entries(queries)) {
@@ -489,12 +566,16 @@ await step('cleanup', async () => {
   const cql = encodeURIComponent(`space="${cfg.testSpace}" and type=page and title ~ "Spike"`)
   const found = await call(R, 'GET', `/rest/api/content/search?cql=${cql}&limit=100`)
   const ids = new Set([
-    ...(found.body?.results ?? []).filter(p => /^(Spike (run|child) |ADR-9\d+ Spike fixture$)/.test(p.title)).map(p => p.id),
+    ...(found.body?.results ?? [])
+      .filter(p => /^(Spike (run|child) |ADR-9\d+ Spike fixture$)/.test(p.title))
+      .map(p => p.id),
     ...(ctx.fixtures ?? []),
     ...(runPage ? [runPage.id] : []),
   ])
   ids.delete(ctx.child)
-  const r = await call(W, 'POST', '/rest/api/content/archive', { json: { pages: [...ids].map(id => ({ id: Number(id) })) } })
+  const r = await call(W, 'POST', '/rest/api/content/archive', {
+    json: { pages: [...ids].map(id => ({ id: Number(id) })) },
+  })
   let task
   for (let i = 0; r.status === 202 && i < 20 && !task?.finished; i++) {
     await new Promise(done => setTimeout(done, 1000))
@@ -503,7 +584,12 @@ await step('cleanup', async () => {
   note('cleanup', {
     archived: ids.size,
     request: brief(r),
-    task: task && { finished: task.finished, successful: task.successful, percent: task.percentageComplete, messages: task.messages },
+    task: task && {
+      finished: task.finished,
+      successful: task.successful,
+      percent: task.percentageComplete,
+      messages: task.messages,
+    },
   })
 })
 

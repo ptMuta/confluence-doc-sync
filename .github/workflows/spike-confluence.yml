@@ -1,9 +1,7 @@
 name: spike-confluence
 
 on:
-  push:
-    branches: [claude/project-thread-1uhc1o]
-    paths: [spikes/**, .github/workflows/spike-confluence.yml]
+  workflow_dispatch:
 
 permissions:
   contents: read
