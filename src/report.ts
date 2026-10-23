@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import type { Finding } from './findings.ts'
 
-export async function report(findings: readonly Finding[]): Promise<void> {
+export async function report(findings: readonly Finding[], name = 'Docs check'): Promise<void> {
   for (const finding of findings) {
     const annotate = finding.severity === 'error' ? core.error : core.warning
     annotate(finding.message, { title: finding.rule, file: finding.file, startLine: finding.line })
@@ -12,7 +12,7 @@ export async function report(findings: readonly Finding[]): Promise<void> {
   for (const finding of findings) counts.set(finding.rule, (counts.get(finding.rule) ?? 0) + 1)
   if (process.env['GITHUB_STEP_SUMMARY'])
     await core.summary
-      .addHeading('Docs check', 2)
+      .addHeading(name, 2)
       .addRaw(`${String(errors)} errors, ${String(warnings)} warnings`, true)
       .addTable([
         [
@@ -22,6 +22,6 @@ export async function report(findings: readonly Finding[]): Promise<void> {
         ...[...counts].sort(([a], [b]) => a.localeCompare(b)).map(([rule, count]) => [rule, String(count)]),
       ])
       .write()
-  if (errors) throw new Error(`Docs check found ${String(errors)} errors`)
-  core.info(`Docs check passed with ${String(warnings)} warnings`)
+  if (errors) throw new Error(`${name} found ${String(errors)} errors`)
+  core.info(`${name} passed with ${String(warnings)} warnings`)
 }

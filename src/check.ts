@@ -12,7 +12,7 @@ import { ids } from './lint/ids.ts'
 import { links, usage } from './lint/links.ts'
 import { refs } from './lint/refs.ts'
 import { exists, readText } from './source/files.ts'
-import { loadSources } from './source/load.ts'
+import { loadSources, type Sources } from './source/load.ts'
 import { isFinding, parseYaml, validate } from './source/yaml.ts'
 
 const rules: readonly Rule[] = [ids, refs, decisions, content, duplicates, secrets, links, usage, diagrams]
@@ -43,16 +43,23 @@ async function loadTags(root: string, config: Config): Promise<{ tags?: Set<stri
   return value ? { tags: new Set([...value.tags, ...extra]), findings } : { findings }
 }
 
-export async function check(root: string, configFile: string, render?: Renderer): Promise<Finding[]> {
+export interface Analysis {
+  readonly findings: Finding[]
+  readonly config?: Config
+  readonly sources?: Sources
+  readonly theme?: Theme
+}
+
+export async function analyze(root: string, configFile: string, render?: Renderer): Promise<Analysis> {
   const { config, findings } = await loadConfig(root, configFile)
-  if (!config) return findings
+  if (!config) return { findings }
   const [loaded, vocabulary, themed] = await Promise.all([
     loadSources(root, config),
     loadTags(root, config),
     loadTheme(root, config.theme),
   ])
   const setup = [...findings, ...loaded.findings, ...vocabulary.findings, ...themed.findings]
-  if (!themed.theme) return setup
+  if (!themed.theme) return { findings: setup, config, sources: loaded.sources }
   const context = {
     config,
     sources: loaded.sources,
@@ -63,7 +70,15 @@ export async function check(root: string, configFile: string, render?: Renderer)
     render,
   }
   const results = await Promise.all(rules.map(async rule => rule(context)))
-  return [...setup, ...results.flat()].sort(
-    (a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule),
-  )
+  return {
+    findings: [...setup, ...results.flat()].sort(
+      (a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule),
+    ),
+    config,
+    sources: loaded.sources,
+    theme: themed.theme,
+  }
 }
+
+export const check = async (root: string, configFile: string, render?: Renderer): Promise<Finding[]> =>
+  (await analyze(root, configFile, render)).findings
