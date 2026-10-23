@@ -16,7 +16,7 @@ const cfg = {
   testSpace: required('CONFLUENCE_TEST_SPACE'),
   eaSpace: required('CONFLUENCE_EA_SPACE'),
   eaFolder: process.env.CONFLUENCE_EA_FOLDER ?? '',
-  run: process.env.GITHUB_RUN_ID ?? String(Date.now()),
+  run: process.env.GITHUB_RUN_ID ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? 1}` : String(Date.now()),
 }
 
 if (!/^[a-z0-9-]+\.atlassian\.net$/.test(cfg.site)) throw new Error('CONFLUENCE_SITE must look like name.atlassian.net')
