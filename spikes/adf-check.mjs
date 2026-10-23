@@ -46,20 +46,9 @@ async function call(token, method, path, { json, form, headers = {} } = {}) {
   return body
 }
 
-const walk = (node, visit) => {
-  if (Array.isArray(node)) return node.forEach(n => walk(n, visit))
-  if (node && typeof node === 'object') {
-    visit(node)
-    Object.values(node).forEach(v => walk(v, visit))
-  }
-}
-
-const types = adf => {
-  const counts = {}
-  walk(adf, n => {
-    if (typeof n.type === 'string' && (n.content || n.text !== undefined || n.attrs || n.type === 'hardBreak'))
-      counts[n.type] = (counts[n.type] ?? 0) + 1
-  })
+const types = (node, counts = {}) => {
+  counts[node.type] = (counts[node.type] ?? 0) + 1
+  for (const child of node.content ?? []) types(child, counts)
   return counts
 }
 

@@ -34,7 +34,18 @@ export const doc = (content: readonly Node[]): Node => ({ type: 'doc', attrs: { 
 export const text = (value: string, marks: readonly Mark[] = []): Node[] =>
   value ? [{ type: 'text', text: value, ...(marks.length ? { marks } : {}) }] : []
 
-export const paragraph = (content: readonly Node[]): Node => ({ type: 'paragraph', content })
+const sameMarks = (a: Node, b: Node): boolean => JSON.stringify(a.marks) === JSON.stringify(b.marks)
+
+export const paragraph = (content: readonly Node[]): Node => ({
+  type: 'paragraph',
+  content: content.reduce<Node[]>((merged, node) => {
+    const last = merged.at(-1)
+    if (last?.type === 'text' && node.type === 'text' && sameMarks(last, node))
+      merged[merged.length - 1] = { ...last, text: `${last.text ?? ''}${node.text ?? ''}` }
+    else merged.push(node)
+    return merged
+  }, []),
+})
 
 const heading = (level: number, content: readonly Node[]): Node => ({
   type: 'heading',
