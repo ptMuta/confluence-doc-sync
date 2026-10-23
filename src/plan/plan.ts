@@ -48,7 +48,7 @@ async function connectCloud(site: string, token: string, pin?: string): Promise<
   return { http: readClient(id, token), cloudId: id }
 }
 
-async function preflight(http: Http, reader: Reader, paths: string[], spaceKey: string): Promise<string[]> {
+export async function preflight(http: Http, reader: Reader, paths: string[], spaceKey: string): Promise<string[]> {
   const missing = await missingScopes(http, paths)
   if (missing.length) return missing
   const space = await reader.space(spaceKey)

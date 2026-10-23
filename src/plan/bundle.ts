@@ -22,7 +22,7 @@ export interface Plan {
   readonly pages: readonly DesiredPage[]
 }
 
-async function files(dir: string): Promise<string[]> {
+export async function files(dir: string): Promise<string[]> {
   const entries = await readdir(dir, { recursive: true, withFileTypes: true })
   return entries
     .filter(entry => entry.isFile())
@@ -30,11 +30,18 @@ async function files(dir: string): Promise<string[]> {
     .sort()
 }
 
-async function bundleHash(dir: string): Promise<string> {
-  const lines = await Promise.all(
-    (await files(dir)).map(async file => `${sha256(await readFile(join(dir, file)))}  ${file}\n`),
+export const hashFiles = (entries: readonly (readonly [string, Buffer])[]): string =>
+  sha256(
+    [...entries]
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .map(([file, data]) => `${sha256(data)}  ${file}\n`)
+      .join(''),
   )
-  return sha256(lines.join(''))
+
+async function bundleHash(dir: string): Promise<string> {
+  return hashFiles(
+    await Promise.all((await files(dir)).map(async file => [file, await readFile(join(dir, file))] as const)),
+  )
 }
 
 export async function writeBundle(

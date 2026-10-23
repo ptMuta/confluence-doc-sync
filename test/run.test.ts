@@ -16,8 +16,11 @@ const core = vi.hoisted(() => ({
 vi.mock('@actions/core', async importOriginal => ({ ...(await importOriginal<object>()), ...core }))
 const planner = vi.hoisted(() => ({ plan: vi.fn() }))
 vi.mock('../src/plan/plan.ts', () => planner)
+const publisher = vi.hoisted(() => ({ publish: vi.fn() }))
+vi.mock('../src/publish/publish.ts', () => publisher)
 
 const { run } = await import('../src/run.ts')
+const summary = join(await mkdtemp(join(tmpdir(), 'summary-')), 'summary.md')
 
 describe('run', () => {
   beforeEach(() => {
@@ -38,10 +41,11 @@ describe('run', () => {
     else expect(core.setFailed).not.toHaveBeenCalled()
   })
 
-  it('fails publish until it exists', async () => {
+  it('needs every publish input', async () => {
     inputs['mode'] = 'publish'
+    inputs['confluence-token'] = 'token'
     await run()
-    expect(core.setFailed).toHaveBeenCalledWith('Mode "publish" is not implemented yet')
+    expect(core.setFailed).toHaveBeenCalledWith('Mode "publish" needs expected-bundle-sha256')
   })
 
   it('needs a token to plan', async () => {
@@ -51,7 +55,6 @@ describe('run', () => {
   })
 
   it('sets the plan outputs and writes a summary', async () => {
-    const summary = join(await mkdtemp(join(tmpdir(), 'summary-')), 'summary.md')
     await writeFile(summary, '')
     vi.stubEnv('GITHUB_STEP_SUMMARY', summary)
     inputs['mode'] = 'plan'
@@ -85,5 +88,30 @@ describe('run', () => {
     })
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('boom')
+  })
+
+  it('publishes and summarizes what changed', async () => {
+    await writeFile(summary, '')
+    vi.stubEnv('GITHUB_STEP_SUMMARY', summary)
+    Object.assign(inputs, {
+      mode: 'publish',
+      'confluence-token': 'token',
+      'expected-bundle-sha256': 'abc',
+      'environment-tier': 'reviewed',
+      'ownership-key': 'key',
+      'change-author': 'someone',
+    })
+    publisher.publish.mockResolvedValue({ findings: [], applied: { create: 2, update: 1, move: 0, archive: 0 } })
+    await run()
+    expect(core.setFailed).not.toHaveBeenCalled()
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ bundlePath: 'docs-sync-plan', tier: 'reviewed', author: 'someone' }),
+    )
+    expect(core.info).toHaveBeenCalledWith('Published: 2 created, 1 updated, 0 moved, 0 archived')
+    expect(await readFile(summary, 'utf8')).toContain('Archived')
+    vi.stubEnv('GITHUB_STEP_SUMMARY', '')
+    publisher.publish.mockResolvedValue({ findings: [] })
+    await run()
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 })

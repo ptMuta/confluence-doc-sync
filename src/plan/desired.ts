@@ -14,7 +14,8 @@ import { canonical, sha256 } from './hash.ts'
 const pageHref = (key: string, anchor?: string): string =>
   `docs-sync:page/${encodeURIComponent(key)}${anchor ? `#${anchor}` : ''}`
 
-const attachmentId = (name: string): string => `docs-sync:attachment/${name}`
+const attachmentPrefix = 'docs-sync:attachment/'
+const attachmentId = (name: string): string => `${attachmentPrefix}${name}`
 
 export interface Image {
   readonly name: string
@@ -66,6 +67,29 @@ const mediaIds = (node: Node): string[] => [
   ...(node.content ?? []).flatMap(mediaIds),
 ]
 
+const attachmentNames = (body: Node): string[] =>
+  [...new Set(mediaIds(body))]
+    .filter(id => id.startsWith(attachmentPrefix))
+    .map(id => id.slice(attachmentPrefix.length))
+
+export function contentHash(
+  page: {
+    readonly title: string
+    readonly parent?: string | undefined
+    readonly labels: readonly string[]
+    readonly body: Node
+  },
+  images: ReadonlyMap<string, { readonly sha256: string }>,
+): string {
+  const attachments = attachmentNames(page.body).flatMap(name => {
+    const image = images.get(name)
+    return image ? [{ name, sha256: image.sha256 }] : []
+  })
+  return sha256(
+    canonical({ title: page.title, parent: page.parent, labels: page.labels, body: page.body, attachments }),
+  )
+}
+
 export async function desiredState(input: DesiredInput): Promise<Desired> {
   const { config, sources, theme, render, read, resolved, blobUrl } = input
   const findings: Finding[] = []
@@ -111,26 +135,18 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
     },
   }
 
-  const byName = new Map([...images.values()].map(image => [attachmentId(image.name), image]))
-  const pages = renderPages(config, sources, resolver).map(page => {
-    const attachments = [...new Set(mediaIds(page.body))].map(id => byName.get(id)).filter(image => image !== undefined)
-    const content = {
-      title: page.title,
-      parent: page.parent,
-      labels: page.labels,
-      body: page.body,
-      attachments: attachments.map(image => ({ name: image.name, sha256: image.sha256 })),
-    }
-    return {
-      key: page.key,
-      title: page.title,
-      ...(page.parent ? { parent: page.parent } : {}),
-      labels: page.labels,
-      body: page.body,
-      attachments: attachments.map(image => image.name).sort(),
-      hash: sha256(canonical(content)),
-    }
-  })
+  const byName = new Map([...images.values()].map(image => [image.name, image]))
+  const pages = renderPages(config, sources, resolver).map(page => ({
+    key: page.key,
+    title: page.title,
+    ...(page.parent ? { parent: page.parent } : {}),
+    labels: page.labels,
+    body: page.body,
+    attachments: attachmentNames(page.body)
+      .filter(name => byName.has(name))
+      .sort(),
+    hash: contentHash(page, byName),
+  }))
 
   const titles = new Map<string, string>()
   for (const page of pages) {

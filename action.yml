@@ -17,6 +17,8 @@ inputs:
     description: Tier set per environment by an admin (publish)
   ownership-key:
     description: HMAC key for page ownership markers (publish)
+  change-author:
+    description: GitHub login of the change's author, for approver runs (publish)
 outputs:
   bundle-path:
     description: Path of the written plan bundle

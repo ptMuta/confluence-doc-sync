@@ -55,6 +55,8 @@ export const configSchema = z.strictObject({
     }),
   approval: z.enum(['none', 'always', 'on-risk']).default('on-risk'),
   approvers: z.array(z.string().trim().min(1)).default([]),
+  'self-approval': z.boolean().default(true),
+  branch: z.string().trim().min(1).default('main'),
   'diagram-output': z.enum(['image', 'macro']).default('image'),
   theme: z.union([z.enum(themeNames), repoPath]).default('nord'),
   'diagram-max-mb': z.number().int().positive().max(1000).default(50),

@@ -2,9 +2,14 @@ import { z } from 'zod'
 import type { Reader } from '../confluence/reader.ts'
 import { error, type Finding } from '../findings.ts'
 
-const markerKey = 'docs-sync'
+export const markerKey = 'docs-sync'
 
-const markerSchema = z.object({ source: z.string().min(1), hash: z.string(), version: z.number().int() })
+const markerSchema = z.object({
+  source: z.string().min(1),
+  hash: z.string(),
+  version: z.number().int(),
+  signature: z.string().optional(),
+})
 
 export interface Owned {
   readonly id: string
@@ -14,6 +19,8 @@ export interface Owned {
   readonly version: number
   readonly hash: string
   readonly edited: boolean
+  readonly markerVersion: number
+  readonly signature?: string
 }
 
 export async function currentState(
@@ -46,6 +53,8 @@ export async function currentState(
       version: page.version ?? 0,
       hash: marker.data.hash,
       edited: page.version !== marker.data.version,
+      markerVersion: marker.data.version,
+      ...(marker.data.signature ? { signature: marker.data.signature } : {}),
     })
   }
   return { owned, findings }

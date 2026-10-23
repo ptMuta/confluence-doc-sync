@@ -132,6 +132,7 @@ const scopes: readonly [RegExp, string][] = [
   [/^\/api\/v2\/pages/, 'read:page:confluence'],
   [/^\/rest\/api\/group/, 'read:group:confluence'],
   [/^\/rest\/api\/content\/search/, 'search:confluence'],
+  [/^\/rest\/api\/longtask/, 'read:content.metadata:confluence'],
 ]
 
 export const scopeFor = (path: string): string =>

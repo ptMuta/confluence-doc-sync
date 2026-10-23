@@ -7,6 +7,7 @@ const gated = [
   'expected-bundle-sha256',
   'environment-tier',
   'ownership-key',
+  'change-author',
 ] as const
 type Gated = (typeof gated)[number]
 

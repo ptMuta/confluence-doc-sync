@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import type { PublishResult } from '../publish/publish.ts'
 import type { PlanResult } from './plan.ts'
 
 type Outcome = NonNullable<PlanResult['outcome']>
@@ -20,5 +21,19 @@ export async function summarize(bundlePath: string, outcome: Outcome): Promise<v
     ])
     .addRaw(`Bundle SHA-256: \`${sha256}\``, true)
     .addRaw(lockChanged ? '\n\nThe lock file changed: commit docs-sync.lock from the plan bundle.' : '', true)
+    .write()
+}
+
+export async function published(applied: NonNullable<PublishResult['applied']>): Promise<void> {
+  const { create, update, move, archive } = applied
+  core.info(
+    `Published: ${String(create)} created, ${String(update)} updated, ${String(move)} moved, ${String(archive)} archived`,
+  )
+  if (!process.env['GITHUB_STEP_SUMMARY']) return
+  await core.summary
+    .addTable([
+      ['Created', 'Updated', 'Moved', 'Archived'].map(data => ({ data, header: true })),
+      [create, update, move, archive].map(String),
+    ])
     .write()
 }

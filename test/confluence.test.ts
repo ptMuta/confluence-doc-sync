@@ -1,7 +1,16 @@
 import { describe, expect, it, vi } from 'vitest'
-import { cloudId, HttpError, readClient, ScopeError, type Http } from '../src/confluence/http/client.ts'
+import {
+  cloudId,
+  HttpError,
+  readClient,
+  ScopeError,
+  writeClient,
+  type Http,
+  type WriteHttp,
+} from '../src/confluence/http/client.ts'
 import { missingScopes } from '../src/confluence/preflight.ts'
 import { cloudReader, scopeFor } from '../src/confluence/reader.ts'
+import { cloudWriter, missingWriteScopes } from '../src/confluence/writer.ts'
 import { currentState } from '../src/plan/state.ts'
 import { FakeConfluence } from './fake-confluence.ts'
 
@@ -128,5 +137,52 @@ describe('currentState', () => {
     const { owned, findings } = await currentState(cloudReader(fake.http), '1', 'config.yaml')
     expect(owned.map(page => page.id)).toEqual(['2'])
     expect(findings.map(finding => finding.message)).toEqual(['Pages 2 and 3 both claim a.md'])
+  })
+})
+
+describe('writer', () => {
+  it('sends JSON and multipart bodies with the method in errors', async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(reply(200, { id: '5', version: { number: 1 } }))
+      .mockResolvedValueOnce(reply(200, ''))
+      .mockResolvedValueOnce(reply(400, 'bad'))
+    const writer = cloudWriter(writeClient(cloud, 't', fetch))
+    expect(await writer.createPage('s', '1', 'Title')).toEqual({ id: '5', version: 1 })
+    expect(fetch.mock.calls[0]?.[1]).toMatchObject({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    await writer.upload('5', 'a.png', Buffer.from('x'), 'sum')
+    expect(fetch.mock.calls[1]?.[1]).toMatchObject({ method: 'PUT', headers: { 'X-Atlassian-Token': 'no-check' } })
+    expect(fetch.mock.calls[1]?.[1]?.body).toBeInstanceOf(FormData)
+    await expect(writer.move('5', '1')).rejects.toThrow('PUT /rest/api/content/5/move/append/1 returned 400: bad')
+  })
+
+  it('waits for archiving and reports failures', async () => {
+    const pause = vi.fn(() => Promise.resolve())
+    const http = (...statuses: unknown[]) => {
+      const get = vi.fn()
+      for (const status of statuses) get.mockResolvedValueOnce(status)
+      get.mockResolvedValue({ finished: false })
+      return { get, pages: vi.fn(), send: vi.fn(() => Promise.resolve({ id: '9' })) } as unknown as WriteHttp
+    }
+    await cloudWriter(http({ finished: false }, { finished: true, successful: true }), pause).archive(['1'])
+    expect(pause).toHaveBeenCalledTimes(1)
+    await expect(
+      cloudWriter(
+        http({ finished: true, successful: false, messages: [{ translation: 'has children' }] }),
+        pause,
+      ).archive(['1']),
+    ).rejects.toThrow('Archiving failed: has children')
+    await expect(cloudWriter(http({ finished: true }), pause).archive(['1'])).rejects.toThrow('no reason given')
+    await expect(cloudWriter(http(), pause).archive(['1'])).rejects.toThrow(
+      'Archiving did not finish; check long task 9',
+    )
+  })
+
+  it('passes unexpected errors through the write probes', async () => {
+    const http = { get: vi.fn(), pages: vi.fn(), send: () => Promise.reject(new Error('network down')) }
+    await expect(missingWriteScopes(http as unknown as WriteHttp)).rejects.toThrow('network down')
   })
 })
