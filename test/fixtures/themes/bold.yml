@@ -1,0 +1,171 @@
+version: 1
+background: "#FFFFFF"
+font:
+  family: Inter
+  size: 13
+  color: "#0F172A"
+roles:
+  service:
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "14"
+    strokeWidth: "2"
+    spacing: "10"
+    shadow: "0"
+    fontStyle: "1"
+    gradientDirection: south
+    fillColor: "#4F46E5"
+    gradientColor: none
+    strokeColor: "#4F46E5"
+    fontColor: "#FFFFFF"
+  data-store:
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "14"
+    strokeWidth: "2"
+    spacing: "10"
+    shadow: "0"
+    fontStyle: "1"
+    gradientDirection: south
+    shape: cylinder3
+    boundedLbl: "1"
+    backgroundOutline: "1"
+    size: "12"
+    fillColor: "#059669"
+    gradientColor: none
+    strokeColor: "#059669"
+    fontColor: "#FFFFFF"
+  queue:
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "50"
+    strokeWidth: "2"
+    spacing: "10"
+    shadow: "0"
+    fontStyle: "1"
+    gradientDirection: south
+    fillColor: "#EA580C"
+    gradientColor: none
+    strokeColor: "#EA580C"
+    fontColor: "#FFFFFF"
+  actor:
+    shape: umlActor
+    verticalLabelPosition: bottom
+    verticalAlign: top
+    strokeWidth: "2"
+    fontStyle: "1"
+    fillColor: "#0F172A"
+    strokeColor: "#0F172A"
+    fontColor: "#0F172A"
+  external:
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "14"
+    strokeWidth: "2"
+    spacing: "10"
+    shadow: "0"
+    fontStyle: "1"
+    gradientDirection: south
+    dashed: "1"
+    dashPattern: 6 4
+    fillColor: "#E2E8F0"
+    gradientColor: none
+    strokeColor: "#64748B"
+    fontColor: "#334155"
+  control:
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "14"
+    strokeWidth: "2"
+    spacing: "10"
+    shadow: "0"
+    fontStyle: "1"
+    gradientDirection: south
+    fillColor: "#E11D48"
+    gradientColor: none
+    strokeColor: "#E11D48"
+    fontColor: "#FFFFFF"
+  zone:
+    container: "1"
+    collapsible: "0"
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "4"
+    verticalAlign: middle
+    align: left
+    spacingLeft: "12"
+    fontStyle: "1"
+    shape: swimlane
+    startSize: "32"
+    horizontal: "1"
+    strokeWidth: "2"
+    fillColor: "#0F172A"
+    swimlaneFillColor: "#F1F5F9"
+    strokeColor: "#0F172A"
+    fontColor: "#FFFFFF"
+  boundary:
+    container: "1"
+    collapsible: "0"
+    whiteSpace: wrap
+    rounded: "1"
+    arcSize: "4"
+    verticalAlign: top
+    align: left
+    spacingLeft: "12"
+    fontStyle: "1"
+    spacingTop: "6"
+    strokeWidth: "2"
+    dashed: "1"
+    dashPattern: 8 4
+    fillColor: "#FFE4E6"
+    strokeColor: "#E11D48"
+    fontColor: "#BE123C"
+  note:
+    shape: note
+    whiteSpace: wrap
+    size: "14"
+    spacing: "10"
+    strokeWidth: "1"
+    shadow: "0"
+    fillColor: "#FACC15"
+    strokeColor: "#FACC15"
+    fontColor: "#422006"
+    align: left
+  text:
+    text: ""
+    whiteSpace: wrap
+    strokeColor: none
+    fillColor: none
+    fontColor: "#64748B"
+  flow:
+    edgeStyle: orthogonalEdgeStyle
+    rounded: "1"
+    arcSize: "16"
+    orthogonalLoop: "1"
+    jettySize: auto
+    strokeColor: "#0F172A"
+    strokeWidth: "2"
+    endArrow: block
+    endFill: "1"
+    endSize: "7"
+    fontColor: "#0F172A"
+    fontSize: "11"
+    fontStyle: "1"
+    labelBackgroundColor: "#FFFFFF"
+  flow-async:
+    edgeStyle: orthogonalEdgeStyle
+    rounded: "1"
+    arcSize: "16"
+    orthogonalLoop: "1"
+    jettySize: auto
+    strokeColor: "#EA580C"
+    strokeWidth: "2"
+    endArrow: block
+    endFill: "1"
+    endSize: "7"
+    fontColor: "#9A3412"
+    fontSize: "11"
+    fontStyle: "1"
+    labelBackgroundColor: "#FFFFFF"
+    dashed: "1"
+    dashPattern: 6 4
