@@ -1,5 +1,6 @@
 import { error, type Finding } from '../findings.ts'
 import { inlines, spans } from '../model/text.ts'
+import type { Sources } from '../source/load.ts'
 import { externalRefFields, localRefFields } from '../source/schemas.ts'
 import { documents, type Rule } from './context.ts'
 import { owners } from './ids.ts'
@@ -12,8 +13,7 @@ interface Use {
 
 const listed = (value: unknown): string[] => (Array.isArray(value) ? value.filter(v => typeof v === 'string') : [])
 
-export const refs: Rule = ({ config, sources }) => {
-  const known = new Set(owners(sources).map(owner => owner.id))
+export function uses(sources: Sources): Use[] {
   const uses: Use[] = []
   for (const decision of sources.decisions) {
     const { meta, file, lineOf } = decision
@@ -34,9 +34,13 @@ export const refs: Rule = ({ config, sources }) => {
     for (const span of spans(document.blocks))
       for (const node of inlines(span.inlines))
         if (node.type === 'ref') uses.push({ ref: node.id, file: document.file, line: span.line })
+  return uses
+}
 
+export const refs: Rule = ({ config, sources }) => {
+  const known = new Set(owners(sources).map(owner => owner.id))
   const findings: Finding[] = []
-  for (const { ref, file, line } of uses) {
+  for (const { ref, file, line } of uses(sources)) {
     const colon = ref.indexOf(':')
     if (colon < 0) {
       if (!known.has(ref)) findings.push(error('refs/unknown-id', file, line, `${ref} does not exist`))

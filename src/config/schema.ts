@@ -40,12 +40,19 @@ const referenceSource = z.strictObject({
 
 export const configSchema = z.strictObject({
   system: z.string().trim().min(1),
-  confluence: z.strictObject({
-    site: z.string().regex(/^[a-z0-9][a-z0-9-]*\.atlassian\.net$/, 'Must be a <name>.atlassian.net host'),
-    'cloud-id': z.uuid().optional(),
-    space,
-    'root-page': z.coerce.string().regex(/^\d+$/, 'Must be a page id'),
-  }),
+  confluence: z
+    .strictObject({
+      site: z.string().regex(/^[a-z0-9][a-z0-9-]*\.atlassian\.net$/, 'Must be a <name>.atlassian.net host'),
+      'cloud-id': z.uuid().optional(),
+      space,
+      'root-page': z.coerce.string().regex(/^\d+$/, 'Must be a page id'),
+      visibility: z.enum(['space', 'restricted', 'public']).default('space'),
+      readers: z.array(z.string().trim().min(1)).min(1).optional(),
+    })
+    .refine(value => !value.readers || value.visibility === 'restricted', {
+      message: 'readers needs visibility: restricted',
+      path: ['readers'],
+    }),
   approval: z.enum(['none', 'always', 'on-risk']).default('on-risk'),
   approvers: z.array(z.string().trim().min(1)).default([]),
   'diagram-output': z.enum(['image', 'macro']).default('image'),
