@@ -57,7 +57,7 @@ export async function check(root: string, configFile: string, render?: Renderer)
     sources: loaded.sources,
     tags: vocabulary.tags,
     exists: (file: string) => exists(root, file),
-    read: (file: string) => readText(root, file),
+    read: (file: string, maxBytes?: number) => readText(root, file, maxBytes),
     theme: themed.theme,
     render,
   }

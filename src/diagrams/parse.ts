@@ -23,15 +23,14 @@ export interface Page {
   readonly cells: readonly Cell[]
 }
 
-const maxInflated = 10_000_000
 const maxCells = 10_000
 
-function modelOf(diagram: XNode): XNode {
+function modelOf(diagram: XNode, maxBytes: number): XNode {
   const model = diagram.children.find(child => child.tag === 'mxGraphModel')
   if (model) return model
   const packed = diagram.text.trim()
   if (!packed) throw new Error('A page has no content')
-  const inflated = inflateRawSync(Buffer.from(packed, 'base64'), { maxOutputLength: maxInflated }).toString('utf8')
+  const inflated = inflateRawSync(Buffer.from(packed, 'base64'), { maxOutputLength: maxBytes }).toString('utf8')
   const inner = parseXml(decodeURIComponent(inflated))
   if (inner.tag !== 'mxGraphModel') throw new Error('A compressed page does not hold a graph model')
   return inner
@@ -60,14 +59,14 @@ function cellOf(node: XNode): Cell {
   }
 }
 
-export function parseDrawio(text: string): Page[] {
+export function parseDrawio(text: string, maxBytes = 50_000_000): Page[] {
   const root = parseXml(text)
   const diagrams = root.tag === 'mxfile' ? root.children.filter(child => child.tag === 'diagram') : []
   const pages = root.tag === 'mxGraphModel' ? [{ tag: 'diagram', attrs: {}, children: [root], text: '' }] : diagrams
   if (!pages.length) throw new Error('The file has no draw.io pages')
   let total = 0
   return pages.map((diagram, index) => {
-    const model = modelOf(diagram)
+    const model = modelOf(diagram, maxBytes)
     const cells = (model.children.find(child => child.tag === 'root')?.children ?? []).map(cellOf)
     total += cells.length
     if (total > maxCells) throw new Error(`The file has more than ${String(maxCells)} cells`)

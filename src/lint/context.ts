@@ -9,7 +9,7 @@ export interface Context {
   readonly sources: Sources
   readonly tags: ReadonlySet<string> | undefined
   readonly exists: (file: string) => Promise<boolean>
-  readonly read: (file: string) => Promise<string | undefined>
+  readonly read: (file: string, maxBytes?: number) => Promise<string | undefined>
   readonly theme: Theme
   readonly render: Renderer | undefined
 }

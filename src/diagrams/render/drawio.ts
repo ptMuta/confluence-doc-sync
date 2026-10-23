@@ -3,11 +3,10 @@ import { access, chown, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/p
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-export type Renderer = (xml: string) => Promise<Buffer>
+export type Renderer = (xml: string, maxBytes?: number) => Promise<Buffer>
 
 const renderUser = 10001
 const timeout = 60_000
-const maxPng = 20_000_000
 const path = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 
 function exec(command: string, args: readonly string[], home: string, asRoot: boolean): Promise<void> {
@@ -34,7 +33,7 @@ function exec(command: string, args: readonly string[], home: string, asRoot: bo
 
 export function drawioRenderer(command: readonly string[] = ['xvfb-run', '-a', 'drawio']): Renderer {
   const [program = '', ...prefix] = command
-  return async xml => {
+  return async (xml, maxBytes = 50_000_000) => {
     const home = await mkdtemp(join(tmpdir(), 'docs-sync-render-'))
     try {
       const input = join(home, 'diagram.drawio')
@@ -53,7 +52,7 @@ export function drawioRenderer(command: readonly string[] = ['xvfb-run', '-a', '
         asRoot,
       )
       const { size } = await stat(output)
-      if (size > maxPng) throw new Error(`Rendered PNG is larger than ${String(maxPng)} bytes`)
+      if (size > maxBytes) throw new Error(`Rendered PNG is larger than ${String(maxBytes)} bytes`)
       return await readFile(output)
     } finally {
       await rm(home, { recursive: true, force: true })

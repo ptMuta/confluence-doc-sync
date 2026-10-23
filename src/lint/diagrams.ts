@@ -4,9 +4,10 @@ import { error, type Finding } from '../findings.ts'
 import type { Context, Rule } from './context.ts'
 
 async function checkDiagram(context: Context, file: string): Promise<Finding[]> {
+  const maxBytes = context.config['diagram-max-mb'] * 1_000_000
   let pages
   try {
-    pages = parseDrawio((await context.read(file)) ?? '')
+    pages = parseDrawio((await context.read(file, maxBytes)) ?? '', maxBytes)
   } catch (cause) {
     return [error('diagrams/parse', file, 1, cause instanceof Error ? cause.message : String(cause))]
   }
@@ -16,7 +17,7 @@ async function checkDiagram(context: Context, file: string): Promise<Finding[]> 
   const findings: Finding[] = problems.map(problem => ({ ...problem, file, line: 1 }))
   if (!context.render || findings.some(finding => finding.severity === 'error')) return findings
   try {
-    await context.render(xml)
+    await context.render(xml, maxBytes)
   } catch (cause) {
     findings.push(error('diagrams/render', file, 1, cause instanceof Error ? cause.message : String(cause)))
   }
