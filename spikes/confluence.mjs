@@ -485,6 +485,28 @@ await step('ea-resolution', async () => {
   note('ea-resolution', result)
 })
 
+await step('cleanup', async () => {
+  const cql = encodeURIComponent(`space="${cfg.testSpace}" and type=page and title ~ "Spike"`)
+  const found = await call(R, 'GET', `/rest/api/content/search?cql=${cql}&limit=100`)
+  const ids = new Set([
+    ...(found.body?.results ?? []).filter(p => /^(Spike (run|child) |ADR-9\d+ Spike fixture$)/.test(p.title)).map(p => p.id),
+    ...(ctx.fixtures ?? []),
+    ...(runPage ? [runPage.id] : []),
+  ])
+  ids.delete(ctx.child)
+  const r = await call(W, 'POST', '/rest/api/content/archive', { json: { pages: [...ids].map(id => ({ id: Number(id) })) } })
+  let task
+  for (let i = 0; r.status === 202 && i < 20 && !task?.finished; i++) {
+    await new Promise(done => setTimeout(done, 1000))
+    task = (await call(W, 'GET', `/rest/api/longtask/${r.body.id}`)).body
+  }
+  note('cleanup', {
+    archived: ids.size,
+    request: brief(r),
+    task: task && { finished: task.finished, successful: task.successful, percent: task.percentageComplete, messages: task.messages },
+  })
+})
+
 const summary = [
   '## Confluence spike findings',
   '',
