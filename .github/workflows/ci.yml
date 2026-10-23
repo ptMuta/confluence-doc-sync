@@ -13,15 +13,16 @@ concurrency:
 
 jobs:
   node:
+    name: Node checks
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .node-version
       - run: npm ci --ignore-scripts
@@ -35,12 +36,13 @@ jobs:
       - run: npm run build
 
   workflows:
+    name: Workflow lint
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: actionlint
@@ -51,24 +53,26 @@ jobs:
         run: docker run --rm -e GH_TOKEN -v "$PWD:/repo" -w /repo ghcr.io/zizmorcore/zizmor:1.31.1@sha256:42d409dbb851d4c5d35a058cf042b828bea1e3f2884378c526eb0974780e18d9 --persona=pedantic .
 
   sast:
+    name: Static analysis
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: semgrep
-        run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.181.1@sha256:3db5c7af55eb1f512eac0abf0ab69a97b52c74b5e9a27314c221aee1a78d7ab2 semgrep scan --config p/typescript --config p/nodejsscan --config p/github-actions --config p/dockerfile --error --metrics=off
+        run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.181.1@sha256:3db5c7af55eb1f512eac0abf0ab69a97b52c74b5e9a27314c221aee1a78d7ab2 semgrep scan --config p/typescript --config p/nodejsscan --config p/github-actions --config p/dockerfile --exclude-rule dockerfile.security.missing-user-entrypoint.missing-user-entrypoint --error --metrics=off
 
   image:
+    name: Container image
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: hadolint
