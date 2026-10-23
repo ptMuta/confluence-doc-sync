@@ -80,6 +80,27 @@ describe('prepare', () => {
     expect(xml).toContain('Function_Apps.svg')
   })
 
+  it('draws icons as tiles, inline glyphs, or reports them', () => {
+    const cells = [
+      'role=icon;icon=router;',
+      'role=service;icon=api;',
+      'role=data-store;icon=database;',
+      'role=service;icon=no-such-icon;',
+    ]
+    const [page] = parseDrawio(
+      `<mxGraphModel><root>${cells.map((style, index) => `<mxCell id="${String(index)}" style="${style}" vertex="1" parent="1"/>`).join('')}</root></mxGraphModel>`,
+    )
+    if (!page) throw new Error('no page')
+    const { xml, problems } = prepare(page, defaultTheme)
+    expect(problems.map(problem => `${problem.severity} ${problem.message}`)).toEqual([
+      'warning Cell 2: role "data-store" has its own shape, so the icon is not shown',
+      'error Cell 3: unknown icon "no-such-icon"; see https://tabler.io/icons',
+    ])
+    expect(xml).toContain('shape=image;image=data:image/svg+xml,')
+    expect(xml).toContain('shape=label;image=data:image/svg+xml,')
+    expect(xml).not.toMatch(/icon=|tileFill|iconColor/)
+  })
+
   it('keeps https links and decodes HTML labels', () => {
     const [page] = parseDrawio(
       '<mxGraphModel><root><UserObject label="A &amp;amp; B&lt;div&gt;C&amp;#33;&amp;nbsp;&amp;lt;&amp;gt;&amp;quot;&amp;#39;&lt;/div&gt;" link="https://example.com" id="a"><mxCell style="role=service;html=1;fontSize=20;" vertex="1" parent="1"/></UserObject></root></mxGraphModel>',

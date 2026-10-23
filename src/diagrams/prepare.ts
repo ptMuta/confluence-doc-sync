@@ -1,10 +1,11 @@
+import { hasIcon, inlineIcon, tileIcon } from './icons.ts'
 import type { Cell, Page } from './parse.ts'
 import { formatStyle } from './style.ts'
 import type { Theme } from './theme.ts'
 import { element, type XNode } from './xml.ts'
 
 export interface Problem {
-  readonly rule: 'diagrams/role' | 'diagrams/style' | 'diagrams/unsafe'
+  readonly rule: 'diagrams/icon' | 'diagrams/role' | 'diagrams/style' | 'diagrams/unsafe'
   readonly severity: 'error' | 'warning'
   readonly message: string
 }
@@ -72,6 +73,32 @@ function scripted(html: string): boolean {
   )
 }
 
+function applyIcon(
+  style: Map<string, string | undefined>,
+  role: string | undefined,
+): [Problem['severity'], string] | undefined {
+  const icon = style.get('icon')
+  const color = style.get('iconColor') ?? style.get('strokeColor') ?? style.get('fontColor') ?? '#000000'
+  const tile = { fill: style.get('tileFill') ?? 'none', stroke: style.get('tileStroke') ?? 'none', color }
+  for (const key of ['icon', 'iconColor', 'tileFill', 'tileStroke']) style.delete(key)
+  if (icon === undefined) return undefined
+  if (!hasIcon(icon)) return ['error', `unknown icon "${icon}"; see https://tabler.io/icons`]
+  if (role === 'icon') {
+    style.set('shape', 'image')
+    style.set('image', tileIcon(icon, { ...tile, radius: Number(style.get('arcSize') ?? '14') }))
+    return undefined
+  }
+  if (style.has('shape')) return ['warning', `role "${String(role)}" has its own shape, so the icon is not shown`]
+  style.set('shape', 'label')
+  style.set('image', inlineIcon(icon, color))
+  style.set('imageWidth', '20')
+  style.set('imageHeight', '20')
+  style.set('imageAlign', 'left')
+  style.set('imageVerticalAlign', 'middle')
+  style.set('spacingLeft', '30')
+  return undefined
+}
+
 const roleOf = (cell: Cell): string | undefined =>
   cell.style.get('role') ?? (cell.edge ? 'flow' : cell.style.has('text') ? 'text' : undefined)
 
@@ -114,6 +141,8 @@ function prepareCell(cell: Cell, theme: Theme, problems: Problem[]): string {
       .map(([key]) => key)
     if (overridden.length) problem('diagrams/style', 'warning', `the theme replaces ${overridden.join(', ')}`)
     for (const [key, value] of Object.entries(wanted)) style.set(key, value === '' ? undefined : value)
+    const iconProblem = applyIcon(style, role)
+    if (iconProblem) problem('diagrams/icon', ...iconProblem)
   }
 
   const attrs = {

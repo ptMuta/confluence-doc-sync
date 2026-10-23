@@ -1,41 +1,31 @@
 <mxfile>
-  <diagram id="cloud" name="Cloud icons">
+  <diagram id="cloud" name="Cloud services">
     <mxGraphModel page="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="aws" value="AWS" style="role=zone;" vertex="1" parent="1"><mxGeometry x="40" y="40" width="520" height="200" as="geometry" /></mxCell>
-        <mxCell id="aws0" value="CloudFront" style="role=icon;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;fillColor=#8C4FFF;strokeColor=#ffffff;" vertex="1" parent="aws"><mxGeometry x="30" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="aws1" value="Lambda" style="role=icon;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;fillColor=#ED7100;strokeColor=#ffffff;" vertex="1" parent="aws"><mxGeometry x="155" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="aws2" value="SQS" style="role=icon;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;fillColor=#E7157B;strokeColor=#ffffff;" vertex="1" parent="aws"><mxGeometry x="280" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="aws3" value="DynamoDB" style="role=icon;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;fillColor=#C925D1;strokeColor=#ffffff;" vertex="1" parent="aws"><mxGeometry x="405" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="awse0" value="" style="role=flow;" edge="1" parent="1" source="aws0" target="aws1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="awse1" value="" style="role=flow-async;" edge="1" parent="1" source="aws1" target="aws2"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="awse2" value="" style="role=flow;" edge="1" parent="1" source="aws2" target="aws3"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="azure" value="Azure" style="role=zone;" vertex="1" parent="1"><mxGeometry x="600" y="40" width="520" height="200" as="geometry" /></mxCell>
-        <mxCell id="azure0" value="Front Door" style="role=icon;shape=image;image=img/lib/azure2/networking/Front_Doors.svg;" vertex="1" parent="azure"><mxGeometry x="30" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="azure1" value="Functions" style="role=icon;shape=image;image=img/lib/azure2/compute/Function_Apps.svg;" vertex="1" parent="azure"><mxGeometry x="155" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="azure2" value="Service Bus" style="role=icon;shape=image;image=img/lib/azure2/integration/Service_Bus.svg;" vertex="1" parent="azure"><mxGeometry x="280" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="azure3" value="Cosmos DB" style="role=icon;shape=image;image=img/lib/azure2/databases/Azure_Cosmos_DB.svg;" vertex="1" parent="azure"><mxGeometry x="405" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="azuree0" value="" style="role=flow;" edge="1" parent="1" source="azure0" target="azure1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="azuree1" value="" style="role=flow-async;" edge="1" parent="1" source="azure1" target="azure2"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="azuree2" value="" style="role=flow;" edge="1" parent="1" source="azure2" target="azure3"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="gcp" value="Google Cloud" style="role=zone;" vertex="1" parent="1"><mxGeometry x="40" y="280" width="520" height="200" as="geometry" /></mxCell>
-        <mxCell id="gcp0" value="Load Balancing" style="role=icon;shape=mxgraph.gcp2.cloud_load_balancing;fillColor=#4285F4;strokeColor=none;" vertex="1" parent="gcp"><mxGeometry x="30" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="gcp1" value="Cloud Run" style="role=icon;shape=mxgraph.gcp2.cloud_run;fillColor=#4285F4;strokeColor=none;" vertex="1" parent="gcp"><mxGeometry x="155" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="gcp2" value="Pub/Sub" style="role=icon;shape=mxgraph.gcp2.cloud_pubsub;fillColor=#4285F4;strokeColor=none;" vertex="1" parent="gcp"><mxGeometry x="280" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="gcp3" value="Cloud SQL" style="role=icon;shape=mxgraph.gcp2.cloud_sql;fillColor=#4285F4;strokeColor=none;" vertex="1" parent="gcp"><mxGeometry x="405" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="gcpe0" value="" style="role=flow;" edge="1" parent="1" source="gcp0" target="gcp1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="gcpe1" value="" style="role=flow-async;" edge="1" parent="1" source="gcp1" target="gcp2"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="gcpe2" value="" style="role=flow;" edge="1" parent="1" source="gcp2" target="gcp3"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="ali" value="Alibaba Cloud" style="role=zone;" vertex="1" parent="1"><mxGeometry x="600" y="280" width="520" height="200" as="geometry" /></mxCell>
-        <mxCell id="ali0" value="WAF" style="role=icon;shape=mxgraph.alibaba_cloud.waf_web_application_firewall;fillColor=#FF6A00;strokeColor=none;" vertex="1" parent="ali"><mxGeometry x="30" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="ali1" value="ECS" style="role=icon;shape=mxgraph.alibaba_cloud.ecs_elastic_compute_service;fillColor=#FF6A00;strokeColor=none;" vertex="1" parent="ali"><mxGeometry x="155" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="ali2" value="Message Queue" style="role=icon;shape=mxgraph.alibaba_cloud.mq_message_queue;fillColor=#FF6A00;strokeColor=none;" vertex="1" parent="ali"><mxGeometry x="280" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="ali3" value="PolarDB" style="role=icon;shape=mxgraph.alibaba_cloud.polardb;fillColor=#FF6A00;strokeColor=none;" vertex="1" parent="ali"><mxGeometry x="405" y="62" width="56" height="56" as="geometry" /></mxCell>
-        <mxCell id="alie0" value="" style="role=flow;" edge="1" parent="1" source="ali0" target="ali1"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="alie1" value="" style="role=flow-async;" edge="1" parent="1" source="ali1" target="ali2"><mxGeometry relative="1" as="geometry" /></mxCell>
-        <mxCell id="alie2" value="" style="role=flow;" edge="1" parent="1" source="ali2" target="ali3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="users" value="Users" style="role=icon;icon=users;" vertex="1" parent="1"><mxGeometry x="40" y="170" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="cdn" value="CDN" style="role=icon;icon=world-www;" vertex="1" parent="1"><mxGeometry x="170" y="170" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="aws" value="AWS eu-west-1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="300" y="40" width="560" height="330" as="geometry" /></mxCell>
+        <mxCell id="gw" value="API gateway" style="role=icon;icon=api;" vertex="1" parent="aws"><mxGeometry x="30" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="fn" value="Functions" style="role=icon;icon=lambda;" vertex="1" parent="aws"><mxGeometry x="160" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="q" value="Queue" style="role=icon;icon=stack-2;" vertex="1" parent="aws"><mxGeometry x="290" y="60" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="db" value="Database" style="role=icon;icon=database;" vertex="1" parent="aws"><mxGeometry x="290" y="200" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="worker" value="Worker" style="role=icon;icon=cpu;" vertex="1" parent="aws"><mxGeometry x="430" y="60" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="kv" value="Secrets" style="role=icon;icon=key;" vertex="1" parent="aws"><mxGeometry x="430" y="200" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="gcp" value="Google Cloud europe-north1" style="role=zone;" vertex="1" parent="1"><mxGeometry x="920" y="40" width="300" height="330" as="geometry" /></mxCell>
+        <mxCell id="lake" value="Storage" style="role=icon;icon=bucket;" vertex="1" parent="gcp"><mxGeometry x="40" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="bi" value="Analytics" style="role=icon;icon=chart-dots;" vertex="1" parent="gcp"><mxGeometry x="190" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="mon" value="Monitoring" style="role=icon;icon=activity-heartbeat;" vertex="1" parent="1"><mxGeometry x="960" y="420" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="c1" value="" style="role=flow;" edge="1" parent="1" source="users" target="cdn"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c2" value="" style="role=flow;" edge="1" parent="1" source="cdn" target="gw"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c3" value="" style="role=flow;" edge="1" parent="1" source="gw" target="fn"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c4" value="" style="role=flow-async;" edge="1" parent="1" source="fn" target="q"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c5" value="" style="role=flow;" edge="1" parent="1" source="fn" target="db"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c6" value="" style="role=flow-async;" edge="1" parent="1" source="q" target="worker"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c7" value="" style="role=flow;" edge="1" parent="1" source="worker" target="kv"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c8" value="Export" style="role=flow;" edge="1" parent="1" source="worker" target="lake"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="c9" value="" style="role=flow;" edge="1" parent="1" source="lake" target="bi"><mxGeometry relative="1" as="geometry" /></mxCell>
       </root>
     </mxGraphModel>
   </diagram>
