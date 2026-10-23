@@ -65,7 +65,6 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
     return { findings }
   }
   if (!config || !sources || !theme || hasErrors(findings)) return { findings }
-  if (config['diagram-output'] === 'macro') return fail('plan/diagram-output', 'Macro output is not supported yet')
   if (sources.diagrams.length && !render) return fail('plan/render', 'draw.io is needed to render diagrams')
   const renderer: Renderer = render ?? (() => Promise.reject(new Error('no renderer')))
 

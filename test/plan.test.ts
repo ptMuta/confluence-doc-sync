@@ -238,9 +238,7 @@ describe('plan', () => {
 
   it('stops early on setup problems', async () => {
     expect((await plan(options({ render: undefined }))).findings.at(-1)?.rule).toBe('plan/render')
-    await config(text => `${text}diagram-output: macro\n`)
-    expect((await plan(options())).findings.at(-1)?.rule).toBe('plan/diagram-output')
-    await config(text => text.replace('diagram-output: macro\n', '').replace('root-page: 123456', 'root-page: 42'))
+    await config(text => text.replace('root-page: 123456', 'root-page: 42'))
     expect((await plan(options())).findings.at(-1)?.rule).toBe('plan/root')
     await config(text => text.replace('space: DOCS', 'space: NOPE'))
     expect((await plan(options())).findings.at(-1)?.rule).toBe('plan/space')

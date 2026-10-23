@@ -15,6 +15,7 @@ const pageHref = (key: string, anchor?: string): string =>
   `docs-sync:page/${encodeURIComponent(key)}${anchor ? `#${anchor}` : ''}`
 
 const attachmentPrefix = 'docs-sync:attachment/'
+export const pageIdPlaceholder = 'docs-sync:page-id'
 const attachmentId = (name: string): string => `${attachmentPrefix}${name}`
 
 export interface Image {
@@ -51,13 +52,13 @@ export interface DesiredInput {
 
 const pngSize = (data: Buffer) => ({ width: data.readUInt32BE(16), height: data.readUInt32BE(20) })
 
-function imageNames(files: readonly string[]): Map<string, string> {
+function baseNames(files: readonly string[]): Map<string, string> {
   const counts = new Map<string, number>()
   for (const file of files) counts.set(basename(file), (counts.get(basename(file)) ?? 0) + 1)
   return new Map(
     files.map(file => [
       file,
-      `${(counts.get(basename(file)) === 1 ? basename(file) : file.replace(/\//g, '-')).replace(/\.drawio$/, '')}.png`,
+      (counts.get(basename(file)) === 1 ? basename(file) : file.replace(/\//g, '-')).replace(/\.drawio$/, ''),
     ]),
   )
 }
@@ -67,10 +68,20 @@ const mediaIds = (node: Node): string[] => [
   ...(node.content ?? []).flatMap(mediaIds),
 ]
 
-const attachmentNames = (body: Node): string[] =>
-  [...new Set(mediaIds(body))]
-    .filter(id => id.startsWith(attachmentPrefix))
-    .map(id => id.slice(attachmentPrefix.length))
+const macroNames = (node: Node): string[] => {
+  const params = node.attrs?.['parameters'] as { guestParams?: { diagramName?: unknown } } | undefined
+  const name = node.type === 'extension' ? params?.guestParams?.diagramName : undefined
+  return [...(typeof name === 'string' ? [name, `${name}.png`] : []), ...(node.content ?? []).flatMap(macroNames)]
+}
+
+const attachmentNames = (body: Node): string[] => [
+  ...new Set([
+    ...mediaIds(body)
+      .filter(id => id.startsWith(attachmentPrefix))
+      .map(id => id.slice(attachmentPrefix.length)),
+    ...macroNames(body),
+  ]),
+]
 
 export function contentHash(
   page: {
@@ -94,14 +105,18 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
   const { config, sources, theme, render, read, resolved, blobUrl } = input
   const findings: Finding[] = []
   const maxBytes = config['diagram-max-mb'] * 1_000_000
-  const names = imageNames(sources.diagrams)
-  const images = new Map<string, Image & { width: number; height: number }>()
+  const macro = config['diagram-output'] === 'macro'
+  const bases = baseNames(sources.diagrams)
+  const images = new Map<string, Image & { width: number; height: number; source: Image }>()
   for (const file of sources.diagrams) {
     const [page] = parseDrawio((await read(file, maxBytes)) ?? '', maxBytes)
     if (!page) continue
-    const data = await render(prepare(page, theme).xml, maxBytes)
-    const name = names.get(file) ?? basename(file)
-    images.set(file, { name, sha256: sha256(data), data, ...pngSize(data) })
+    const xml = Buffer.from(prepare(page, theme).xml)
+    const data = await render(xml.toString(), maxBytes)
+    const base = bases.get(file) ?? basename(file)
+    const source = { name: `${base}.drawio`, sha256: sha256(xml), data: xml }
+    const name = macro ? `${source.name}.png` : `${base}.png`
+    images.set(file, { name, sha256: sha256(data), data, ...pngSize(data), source })
   }
 
   const owners = new Map<string, string>([
@@ -123,6 +138,13 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
     path: path => (keys.has(path) ? pageHref(path) : blobUrl ? `${blobUrl}/${path}` : undefined),
     diagram: path => {
       const image = images.get(path)
+      if (image && macro)
+        return {
+          kind: 'macro',
+          extensionKey: config['drawio-macro-key'],
+          name: image.source.name,
+          pageId: pageIdPlaceholder,
+        }
       return image
         ? {
             kind: 'image',
@@ -135,7 +157,11 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
     },
   }
 
-  const byName = new Map([...images.values()].map(image => [image.name, image]))
+  const files = [...images.values()].flatMap(({ name, sha256: hash, data, source }) => [
+    { name, sha256: hash, data },
+    ...(macro ? [source] : []),
+  ])
+  const byName = new Map(files.map(image => [image.name, image]))
   const pages = renderPages(config, sources, resolver).map(page => ({
     key: page.key,
     title: page.title,
@@ -156,7 +182,7 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
   }
   return {
     pages,
-    images: new Map([...images.values()].map(({ name, sha256: hash, data }) => [name, { name, sha256: hash, data }])),
+    images: byName,
     findings,
   }
 }

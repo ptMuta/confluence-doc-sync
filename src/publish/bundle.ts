@@ -2,6 +2,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import { z } from 'zod'
 import { hashFiles } from '../plan/bundle.ts'
+import { pageIdPlaceholder } from '../plan/desired.ts'
 import { sha256 } from '../plan/hash.ts'
 import type { Node } from '../render/adf.ts'
 
@@ -47,7 +48,7 @@ const planSchema = z.strictObject({
       parent: z.string().optional(),
       labels: z.array(z.string().regex(/^[a-z0-9_-]+$/)),
       body: z.unknown(),
-      attachments: z.array(z.string().regex(/^(?!\.)[^/\\]+\.png$/)),
+      attachments: z.array(z.string().regex(/^(?!\.)[^/\\]+\.(?:png|drawio)$/)),
       hash: z.string(),
     }),
   ),
@@ -81,6 +82,7 @@ const blocks = new Set([
   'text',
   'hardBreak',
   'inlineExtension',
+  'extension',
 ])
 const marks = new Set(['strong', 'em', 'strike', 'code', 'link'])
 const nodeKeys = new Set(['type', 'attrs', 'content', 'marks', 'text'])
@@ -88,7 +90,25 @@ const nodeKeys = new Set(['type', 'attrs', 'content', 'marks', 'text'])
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
-function checkNode(value: unknown, attachments: ReadonlySet<string>, depth = 0): string | undefined {
+function checkMacro(attrs: Record<string, unknown> | undefined, attachments: ReadonlySet<string>, macroKey: string) {
+  const parameters = attrs?.['parameters']
+  const guest = isRecord(parameters) ? parameters['guestParams'] : undefined
+  if (
+    attrs?.['extensionType'] !== 'com.atlassian.ecosystem' ||
+    attrs['extensionKey'] !== macroKey ||
+    !isRecord(parameters) ||
+    Object.keys(parameters).join() !== 'guestParams' ||
+    !isRecord(guest) ||
+    Object.keys(guest).sort().join() !== 'diagramDisplayName,diagramName,pageId' ||
+    typeof guest['diagramName'] !== 'string' ||
+    !attachments.has(guest['diagramName']) ||
+    guest['pageId'] !== pageIdPlaceholder
+  )
+    return 'only draw.io macros for bundled diagrams are allowed'
+  return undefined
+}
+
+function checkNode(value: unknown, attachments: ReadonlySet<string>, macroKey: string, depth = 0): string | undefined {
   if (depth > maxDepth) return 'the page body is nested too deeply'
   if (!isRecord(value) || typeof value['type'] !== 'string') return 'a page body node is malformed'
   const { type, attrs, content, text } = value
@@ -101,6 +121,10 @@ function checkNode(value: unknown, attachments: ReadonlySet<string>, depth = 0):
     (attrs?.['extensionKey'] !== 'anchor' || attrs['extensionType'] !== 'com.atlassian.confluence.macro.core')
   )
     return 'only anchor macros are allowed'
+  if (type === 'extension') {
+    const problem = checkMacro(attrs, attachments, macroKey)
+    if (problem) return problem
+  }
   if (type === 'media') {
     const file = typeof attrs?.['id'] === 'string' ? attrs['id'].replace(/^docs-sync:attachment\//, '') : ''
     if (attrs?.['type'] !== 'file' || attrs['collection'] !== 'docs-sync:collection' || !attachments.has(file))
@@ -117,13 +141,13 @@ function checkNode(value: unknown, attachments: ReadonlySet<string>, depth = 0):
   if (content === undefined) return undefined
   if (!Array.isArray(content)) return `node ${type} has malformed content`
   for (const child of content) {
-    const problem = checkNode(child, attachments, depth + 1)
+    const problem = checkNode(child, attachments, macroKey, depth + 1)
     if (problem) return problem
   }
   return undefined
 }
 
-export async function readBundle(dir: string, expected: string): Promise<Bundle> {
+export async function readBundle(dir: string, expected: string, macroKey: string): Promise<Bundle> {
   if (!/^[0-9a-f]{64}$/.test(expected)) throw new Error('expected-bundle-sha256 must be 64 lowercase hex characters')
   const entries = await readdir(dir, { recursive: true, withFileTypes: true })
   const paths: string[] = []
@@ -149,7 +173,7 @@ export async function readBundle(dir: string, expected: string): Promise<Bundle>
   if (extra.length || images.length !== used.size || images.some(name => !used.has(name)))
     throw new Error('The bundle files do not match the images the plan uses')
   for (const page of plan.pages) {
-    const problem = checkNode(page.body, new Set(page.attachments))
+    const problem = checkNode(page.body, new Set(page.attachments), macroKey)
     if (problem) throw new Error(`Page ${page.key}: ${problem}`)
     if (!isRecord(page.body) || page.body['type'] !== 'doc')
       throw new Error(`Page ${page.key}: the body is not a document`)

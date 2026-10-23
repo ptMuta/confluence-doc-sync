@@ -317,6 +317,16 @@ try {
   expect('logging moved back', (await page(logging.id)).parentId, root)
   expect('gone archived', (await call(R, 'GET', `/api/v2/pages/${gone}`)).status, 'archived')
 
+  appendFileSync(join(repo, '.docs-sync/config.yaml'), 'diagram-output: macro\n')
+  const macro = plan('Plan with draw.io macros')
+  expect('macro output updates the overview', kinds(macro.plan), ['update(content) docs/overview.md'])
+  expect('macro publish', publish('Publish macros', macro.sha, 'unreviewed').ok, true)
+  const macroBody = (await page(overview.id)).body.atlas_doc_format.value
+  const macroFiles = (await call(R, 'GET', `/api/v2/pages/${overview.id}/attachments`)).results.map(a => a.title).sort()
+  expect('macro attachments', macroFiles, ['network.drawio', 'network.drawio.png', 'network.png'])
+  expect('macro points at the page', macroBody.includes(`"pageId":"${overview.id}"`), true)
+  expect('macro uses the draw.io app', macroBody.includes('/static/drawio'), true)
+
   const final = plan('Final plan')
   expect('nothing to do at the end', final.plan.ops, [])
 } catch (cause) {

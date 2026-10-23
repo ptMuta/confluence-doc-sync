@@ -59,7 +59,11 @@ export function cloudWriter(http: WriteHttp, pause = wait): Writer {
     },
     upload: async (pageId, name, data, comment) => {
       const form = new FormData()
-      form.append('file', new Blob([data], { type: 'image/png' }), name)
+      form.append(
+        'file',
+        new Blob([data], { type: name.endsWith('.drawio') ? 'application/vnd.jgraph.mxfile' : 'image/png' }),
+        name,
+      )
       form.append('comment', comment)
       form.append('minorEdit', 'true')
       await http.send('PUT', `/rest/api/content/${q(pageId)}/child/attachment`, form)
