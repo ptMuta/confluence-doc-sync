@@ -81,8 +81,13 @@ jobs:
         run: docker build -t docs-sync:ci .
       - name: Smoke test
         run: |
-          docker run --rm -e INPUT_MODE=check docs-sync:ci
-          if docker run --rm -e INPUT_MODE=check -e INPUT_CONFLUENCE-TOKEN=dummy docs-sync:ci; then
+          sample() { docker run --rm -v "$PWD/test/fixtures/$1:/github/workspace:ro" -w /github/workspace "${@:2}" docs-sync:ci; }
+          sample good -e INPUT_MODE=check
+          if sample bad -e INPUT_MODE=check; then
+            echo "check mode passed the bad sample repo"
+            exit 1
+          fi
+          if sample good -e INPUT_MODE=check -e INPUT_CONFLUENCE-TOKEN=dummy; then
             echo "check mode accepted a token"
             exit 1
           fi

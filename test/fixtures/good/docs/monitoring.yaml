@@ -1,0 +1,6 @@
+- id: MON-001
+  symptom: Payments fail to reach the ledger.
+  signal: https://example.com/alerts/ledger-errors
+  severity: high
+  route: payments-oncall
+  covers: [FR-001]

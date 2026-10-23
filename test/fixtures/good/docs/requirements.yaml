@@ -1,0 +1,9 @@
+- id: NFR-SEC-004
+  statement: If a secret is detected in a plan, then the pipeline shall stop before apply.
+  priority: must
+  verification: policy/no-secrets.rego
+  realizes: [ea:ADR-031]
+- id: FR-001
+  statement: The service shall record every payment in the ledger.
+  priority: must
+  verification: https://example.com/tests/ledger

@@ -1,0 +1,146 @@
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+import { describe, expect, it } from 'vitest'
+import { check } from '../src/check.ts'
+
+const fixtures = join(import.meta.dirname, 'fixtures')
+const config = '.docs-sync/config.yaml'
+
+const base = `system: Payments
+confluence: { site: example.atlassian.net, space: DOCS, root-page: 1 }
+`
+
+async function repo(files: Record<string, string>): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'docs-sync-'))
+  for (const [file, text] of Object.entries(files)) {
+    await mkdir(dirname(join(root, file)), { recursive: true })
+    await writeFile(join(root, file), text)
+  }
+  return root
+}
+
+const rules = async (files: Record<string, string>) => (await check(await repo(files), config)).map(f => f.rule)
+
+const decision = (front: string, body: string) => `---
+id: DEC-0001
+title: A decision
+date: 2026-10-22
+decision-makers: [team]
+${front}
+---
+
+${body}`
+
+const sections = `## Context
+
+Context.
+
+## Options
+
+- One
+- Two
+
+## Decision
+
+We use one because it is simpler.
+
+## Consequences
+
+Fewer parts.
+`
+
+describe('check', () => {
+  it('passes the good sample repo', async () => {
+    expect(await check(join(fixtures, 'good'), config)).toEqual([])
+  })
+
+  it('reports every rule with file and line on the bad sample repo', async () => {
+    const findings = await check(join(fixtures, 'bad'), config)
+    expect(findings.every(f => f.file && f.line > 0)).toBe(true)
+    expect(findings).toMatchSnapshot()
+  })
+
+  it('reports a missing config', async () => {
+    expect(await check(await repo({}), config)).toEqual([
+      { rule: 'config', severity: 'error', file: config, line: 1, message: `Config file ${config} is missing` },
+    ])
+  })
+
+  it.each([
+    ['bad yaml', 'system: [', 'yaml'],
+    ['bad schema', 'system: Payments', 'schema'],
+  ])('reports a config with %s', async (_, text, rule) => {
+    expect(await rules({ [config]: text })).toEqual([rule])
+  })
+
+  it('reads the tag vocabulary', async () => {
+    const vocabulary = `${base}tags: { vocabulary: tags.yaml, extra: [extra] }\n`
+    const page = (tags: string) => `---\ntitle: Page\ntags: [${tags}]\n---\n\nText.\n`
+    expect(
+      await rules({ [config]: vocabulary, 'tags.yaml': 'tags: [known]', 'docs/a.md': page('known, extra') }),
+    ).toEqual([])
+    expect(await rules({ [config]: vocabulary, 'tags.yaml': 'tags: [known]', 'docs/a.md': page('other') })).toEqual([
+      'tags/unknown',
+    ])
+    expect(await rules({ [config]: vocabulary })).toEqual(['config'])
+    expect(await rules({ [config]: vocabulary, 'tags.yaml': 'tags: [' })).toEqual(['yaml'])
+    expect(await rules({ [config]: vocabulary, 'tags.yaml': 'tags: [Bad Tag]' })).toEqual(['schema'])
+  })
+
+  it('reports catalog shape problems', async () => {
+    expect(await rules({ [config]: base, 'docs/logging.yaml': 'id: LOG-001' })).toEqual(['schema'])
+    expect(await rules({ [config]: base, 'docs/logging.yaml': '- [' })).toEqual(['yaml'])
+    expect(await rules({ [config]: base, 'docs/logging.yaml': '- id: LOG-1' })).toContain('schema')
+  })
+
+  it('allows one option when constrained by an external decision', async () => {
+    const ea = `${base}reference-sources:\n  ea: { type: confluence, space: ARCH, folder: X, id-pattern: 'ADR-\\d{3}' }\n`
+    const body = sections.replace('- Two\n', '')
+    expect(
+      await rules({ [config]: ea, 'docs/decisions/DEC-0001.md': decision('constrained-by: [ea:ADR-001]', body) }),
+    ).toEqual([])
+    expect(
+      await rules({ [config]: ea, 'docs/decisions/DEC-0001.md': decision('', body.replace('- One\n', '')) }),
+    ).toEqual(['content/empty-section', 'decision/options'])
+  })
+
+  it('requires the superseded decision to point back', async () => {
+    const second = decision('supersedes: DEC-0001', sections).replace('DEC-0001\ntitle', 'DEC-0002\ntitle')
+    expect(
+      await rules({
+        [config]: base,
+        'docs/decisions/DEC-0001.md': decision('', sections),
+        'docs/decisions/DEC-0002.md': second,
+      }),
+    ).toEqual(['decision/supersede'])
+  })
+
+  it('checks decision link lists and length', async () => {
+    const links = `${sections}\n## Links\n\n- [[DEC-0001]]\n- [Docs](https://example.com)\n- Free text\n`
+    expect(await rules({ [config]: base, 'docs/decisions/DEC-0001.md': decision('', links) })).toEqual([
+      'decision/ids-only',
+    ])
+    const long = `${base}lint: { budgets: { decision: 5 } }\n`
+    expect(await rules({ [config]: long, 'docs/decisions/DEC-0001.md': decision('', sections) })).toEqual([
+      'content/length',
+    ])
+  })
+
+  it('skips links that need no file check', async () => {
+    const page = `---\ntitle: Page\n---\n\n[Top](#top), [Mail](mailto:a@example.com), [Site](https://example.com)\n\n![Remote](https://example.com/a.drawio "Remote")\n`
+    expect(await rules({ [config]: base, 'docs/a.md': page })).toEqual(['markdown/link', 'markdown/diagram'])
+  })
+
+  it('reports the built-in secret patterns', async () => {
+    const samples = [
+      ['AKIA', 'ABCDEFGHIJKLMNOP'],
+      ['-----BEGIN RSA ', 'PRIVATE KEY-----'],
+      ['ghp_', 'a'.repeat(36)],
+      ['xoxb-', '1234567890ab'],
+      ['ATATT', 'x'.repeat(24)],
+    ].map(parts => parts.join(''))
+    const page = `---\ntitle: Page\n---\n\n${samples.map(s => `- ${s}`).join('\n')}\n`
+    expect(await rules({ [config]: base, 'docs/a.md': page })).toEqual(Array(samples.length).fill('content/secret'))
+  })
+})

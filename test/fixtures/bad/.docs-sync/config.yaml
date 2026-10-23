@@ -1,0 +1,17 @@
+system: Payments
+confluence:
+  site: example.atlassian.net
+  space: DOCS
+  root-page: '123456'
+tags:
+  extra: [known]
+reference-sources:
+  ea:
+    type: confluence
+    space: ARCH
+    folder: External decisions
+    id-pattern: 'ADR-\d{3}'
+lint:
+  budgets: { decision: 20, catalog-entry: 10, summary: 5 }
+  filler: [synergy]
+  deny-patterns: ['\b10\.\d+\.\d+\.\d+\b']
