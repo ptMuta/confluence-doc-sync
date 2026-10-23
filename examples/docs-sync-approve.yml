@@ -44,16 +44,16 @@ jobs:
           [[ "$conclusion" == success ]] || { echo "Run $RUN_ID did not succeed"; exit 1; }
           [[ "$sha" == "$HEAD" ]] || { echo "Run $RUN_ID planned $sha, but main is at $HEAD; plan again"; exit 1; }
           echo "author=$(gh api "repos/$REPO/commits/$HEAD" --jq '.author.login // ""')" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v5
-        with:
-          name: docs-sync-plan
-          path: docs-sync-plan
-          run-id: ${{ inputs.run-id }}
-          github-token: ${{ github.token }}
-      - uses: ptMuta/git-confluence-sync@v1
+      - name: Download the plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run-id }}
+          REPO: ${{ github.repository }}
+        run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
+      - uses: ptMuta/git-confluence-sync@0000000000000000000000000000000000000000 # pin to a release commit
         with:
           mode: publish
           confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
