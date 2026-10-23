@@ -6,7 +6,7 @@ on:
       script:
         description: Script to run
         type: choice
-        options: [confluence, adf-check, plan-check]
+        options: [confluence, adf-check, plan-check, publish-check]
         default: confluence
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
   spike:
     name: Confluence spike
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -30,6 +30,9 @@ jobs:
           node-version-file: .node-version
       - run: npm ci --ignore-scripts
       - run: npm run build
+      - name: Build image
+        if: inputs.script == 'publish-check'
+        run: docker build -t docs-sync:spike .
       - name: Run spike
         env:
           SCRIPT: ${{ inputs.script }}

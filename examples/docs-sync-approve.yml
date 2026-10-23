@@ -1,0 +1,64 @@
+name: docs-sync-approve
+
+on:
+  workflow_dispatch:
+    inputs:
+      run-id:
+        description: Run id of the plan that needs approval
+        required: true
+      bundle-sha256:
+        description: Bundle SHA-256 from that run's summary
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: docs-sync-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish an approved plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: docs-sync-approve
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Check the plan run
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run-id }}
+          REPO: ${{ github.repository }}
+          HEAD: ${{ github.sha }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "run-id must be a number"; exit 1; }
+          IFS=$'\t' read -r path branch sha event conclusion < <(
+            gh api "repos/$REPO/actions/runs/$RUN_ID" --jq '[.path, .head_branch, .head_sha, .event, .conclusion] | @tsv'
+          )
+          [[ "$path" == .github/workflows/docs-sync.yml* ]] || { echo "Run $RUN_ID is not a docs-sync run"; exit 1; }
+          [[ "$branch" == main && "$event" == push ]] || { echo "Run $RUN_ID is not a push to main"; exit 1; }
+          [[ "$conclusion" == success ]] || { echo "Run $RUN_ID did not succeed"; exit 1; }
+          [[ "$sha" == "$HEAD" ]] || { echo "Run $RUN_ID planned $sha, but main is at $HEAD; plan again"; exit 1; }
+          echo "author=$(gh api "repos/$REPO/commits/$HEAD" --jq '.author.login // ""')" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Download the plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run-id }}
+          REPO: ${{ github.repository }}
+        run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
+      - uses: ptMuta/git-confluence-sync@0000000000000000000000000000000000000000 # pin to a release commit
+        with:
+          mode: publish
+          confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
+          bundle-path: docs-sync-plan
+          expected-bundle-sha256: ${{ inputs.bundle-sha256 }}
+          environment-tier: ${{ vars.DOCS_SYNC_TIER }}
+          ownership-key: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
+          change-author: ${{ steps.run.outputs.author }}
