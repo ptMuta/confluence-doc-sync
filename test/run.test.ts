@@ -25,6 +25,7 @@ describe('run', () => {
     ['good', undefined],
     ['bad', expect.stringMatching(/^Docs check found \d+ errors$/)],
   ])('runs check on the %s sample repo', async (name, failure) => {
+    vi.stubEnv('GITHUB_STEP_SUMMARY', '')
     vi.spyOn(process, 'cwd').mockReturnValue(join(import.meta.dirname, 'fixtures', name))
     inputs['mode'] = 'check'
     await run()
