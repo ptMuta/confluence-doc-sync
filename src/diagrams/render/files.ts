@@ -2,7 +2,8 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { parseDrawio } from '../parse.ts'
 import { prepare } from '../prepare.ts'
-import { defaultTheme, type Theme } from '../theme.ts'
+import type { Theme } from '../theme.ts'
+import { defaultTheme } from '../themes.ts'
 import type { Renderer } from './drawio.ts'
 
 export async function renderFiles(

@@ -1,0 +1,32 @@
+<mxfile>
+  <diagram id="network" name="Network devices">
+    <mxGraphModel page="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="internet" value="Internet" style="role=icon;icon=cloud;" vertex="1" parent="1"><mxGeometry x="40" y="170" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="site" value="Head office" style="role=zone;" vertex="1" parent="1"><mxGeometry x="170" y="40" width="860" height="430" as="geometry" /></mxCell>
+        <mxCell id="fw" value="Firewall" style="role=icon;icon=wall;" vertex="1" parent="site"><mxGeometry x="40" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="rt" value="Edge router" style="role=icon;icon=router;" vertex="1" parent="site"><mxGeometry x="180" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="core" value="Core switch" style="role=icon;icon=switch-horizontal;" vertex="1" parent="site"><mxGeometry x="330" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="acc1" value="Access switch" style="role=icon;icon=switch-horizontal;" vertex="1" parent="site"><mxGeometry x="250" y="290" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="acc2" value="Access switch" style="role=icon;icon=switch-horizontal;" vertex="1" parent="site"><mxGeometry x="420" y="290" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="wlc" value="Wireless controller" style="role=icon;icon=server-cog;" vertex="1" parent="site"><mxGeometry x="500" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="ap" value="Access point" style="role=icon;icon=access-point;" vertex="1" parent="site"><mxGeometry x="660" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="pcs" value="Workstations" style="role=icon;icon=device-desktop;" vertex="1" parent="site"><mxGeometry x="100" y="290" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="srv" value="Servers" style="role=icon;icon=server-2;" vertex="1" parent="site"><mxGeometry x="660" y="290" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="lap" value="Laptops" style="role=icon;icon=device-laptop;" vertex="1" parent="site"><mxGeometry x="780" y="130" width="56" height="56" as="geometry" /></mxCell>
+        <mxCell id="n1" value="" style="role=flow;" edge="1" parent="1" source="internet" target="fw"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n2" value="" style="role=flow;" edge="1" parent="1" source="fw" target="rt"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n3" value="" style="role=flow;" edge="1" parent="1" source="rt" target="core"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n4" value="" style="role=flow;" edge="1" parent="1" source="core" target="acc1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n5" value="" style="role=flow;" edge="1" parent="1" source="core" target="acc2"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n6" value="" style="role=flow;" edge="1" parent="1" source="core" target="wlc"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n7" value="CAPWAP" style="role=flow-async;" edge="1" parent="1" source="wlc" target="ap"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n8" value="" style="role=flow;" edge="1" parent="1" source="acc2" target="srv"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n9" value="" style="role=flow-async;" edge="1" parent="1" source="ap" target="lap"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="n10" value="" style="role=flow;" edge="1" parent="1" source="acc1" target="pcs"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

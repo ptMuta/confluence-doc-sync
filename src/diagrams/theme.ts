@@ -56,7 +56,7 @@ const line = {
   labelBackgroundColor: '#FFFFFF',
 }
 
-export const defaultTheme: Theme = {
+export const studio: Theme = {
   version: 1,
   background: '#FFFFFF',
   font: { family: 'Inter', size: 13, color: '#0F172A' },
@@ -122,6 +122,16 @@ export const defaultTheme: Theme = {
       strokeColor: '#EAB308',
       fontColor: '#713F12',
       align: 'left',
+    },
+    icon: {
+      aspect: 'fixed',
+      verticalLabelPosition: 'bottom',
+      verticalAlign: 'top',
+      align: 'center',
+      whiteSpace: 'wrap',
+      tileFill: '#FFFFFF',
+      tileStroke: '#E2E8F0',
+      iconColor: '#4F46E5',
     },
     text: { text: '', whiteSpace: 'wrap', strokeColor: 'none', fillColor: 'none', fontColor: '#64748B' },
     flow: line,

@@ -94,10 +94,14 @@ jobs:
       - name: Render samples
         run: |
           mkdir -p renders/a renders/b
-          render() { docker run --rm -v "$PWD/test/fixtures/diagrams:/in:ro" -v "$PWD/renders/$1:/out" docs-sync:ci render /out "/in/$2.drawio"; }
+          render() { docker run --rm -v "$PWD/test/fixtures:/in:ro" -v "$PWD/renders/$1:/out" docs-sync:ci render "${@:3}" /out "/in/diagrams/$2.drawio"; }
           render a showcase
           render b showcase
           cmp renders/a/showcase.png renders/b/showcase.png
+          for theme in studio midnight bold sketch blueprint nord carbon aurora pastel; do
+            mkdir -p "renders/a/$theme"
+            docker run --rm -v "$PWD/test/fixtures:/in:ro" -v "$PWD/renders/a/$theme:/out" docs-sync:ci render --theme "$theme" /out /in/diagrams/{showcase,cloud-icons,network-devices}.drawio
+          done
           if render b unsafe; then
             echo "an unsafe diagram rendered"
             exit 1

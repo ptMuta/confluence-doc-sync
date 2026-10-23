@@ -1,7 +1,8 @@
 import { loadConfig } from './config/load.ts'
 import { vocabularySchema, type Config } from './config/schema.ts'
 import type { Renderer } from './diagrams/render/drawio.ts'
-import { defaultTheme, themeSchema, type Theme } from './diagrams/theme.ts'
+import { themeSchema, type Theme } from './diagrams/theme.ts'
+import { themes } from './diagrams/themes.ts'
 import { error, type Finding } from './findings.ts'
 import type { Rule } from './lint/context.ts'
 import { content, duplicates, secrets } from './lint/content.ts'
@@ -16,8 +17,8 @@ import { isFinding, parseYaml, validate } from './source/yaml.ts'
 
 const rules: readonly Rule[] = [ids, refs, decisions, content, duplicates, secrets, links, usage, diagrams]
 
-async function loadTheme(root: string, file: string | undefined): Promise<{ theme?: Theme; findings: Finding[] }> {
-  if (!file) return { theme: defaultTheme, findings: [] }
+async function loadTheme(root: string, file: string): Promise<{ theme?: Theme; findings: Finding[] }> {
+  if (file in themes) return { theme: themes[file as keyof typeof themes], findings: [] }
   const text = await readText(root, file)
   if (text === undefined) return { findings: [error('config', file, 1, 'Theme file is missing')] }
   const yaml = parseYaml(text, file)
