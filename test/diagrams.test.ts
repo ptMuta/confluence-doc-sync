@@ -7,7 +7,7 @@ import { parseDrawio } from '../src/diagrams/parse.ts'
 import { prepare } from '../src/diagrams/prepare.ts'
 import { drawioRenderer, findRenderer } from '../src/diagrams/render/drawio.ts'
 import { renderFiles } from '../src/diagrams/render/files.ts'
-import { defaultTheme } from '../src/diagrams/theme.ts'
+import { defaultTheme } from '../src/diagrams/themes.ts'
 
 const fixtures = join(import.meta.dirname, 'fixtures')
 const sample = (name: string) => readFile(join(fixtures, 'diagrams', `${name}.drawio`), 'utf8')
@@ -48,7 +48,7 @@ describe('prepare', () => {
     if (!page) throw new Error('no page')
     const { xml, problems } = prepare(page, defaultTheme)
     expect(problems).toEqual([])
-    expect(xml).toContain('background="#FFFFFF"')
+    expect(xml).toContain('background="#ECEFF4"')
     expect(xml).toContain('<Array as="points"><mxPoint x="400" y="20" as="undefined"/>'.replace(' as="undefined"', ''))
     expect(xml).not.toContain('html=1')
   })

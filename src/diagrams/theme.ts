@@ -56,7 +56,7 @@ const line = {
   labelBackgroundColor: '#FFFFFF',
 }
 
-export const defaultTheme: Theme = {
+export const studio: Theme = {
   version: 1,
   background: '#FFFFFF',
   font: { family: 'Inter', size: 13, color: '#0F172A' },

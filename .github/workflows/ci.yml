@@ -98,12 +98,9 @@ jobs:
           render a showcase
           render b showcase
           cmp renders/a/showcase.png renders/b/showcase.png
-          mkdir -p renders/a/studio
-          docker run --rm -v "$PWD/test/fixtures:/in:ro" -v "$PWD/renders/a/studio:/out" docs-sync:ci render /out /in/diagrams/{showcase,cloud-icons,network-devices}.drawio
-          for theme in test/fixtures/themes/*.yml; do
-            name=$(basename "$theme" .yml)
-            mkdir -p "renders/a/$name"
-            docker run --rm -v "$PWD/test/fixtures:/in:ro" -v "$PWD/renders/a/$name:/out" docs-sync:ci render --theme "/in/themes/$name.yml" /out /in/diagrams/{showcase,cloud-icons,network-devices}.drawio
+          for theme in studio midnight bold sketch blueprint nord carbon aurora pastel; do
+            mkdir -p "renders/a/$theme"
+            docker run --rm -v "$PWD/test/fixtures:/in:ro" -v "$PWD/renders/a/$theme:/out" docs-sync:ci render --theme "$theme" /out /in/diagrams/{showcase,cloud-icons,network-devices}.drawio
           done
           if render b unsafe; then
             echo "an unsafe diagram rendered"
