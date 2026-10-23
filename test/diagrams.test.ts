@@ -49,7 +49,7 @@ describe('prepare', () => {
     const { xml, problems } = prepare(page, defaultTheme)
     expect(problems).toEqual([])
     expect(xml).toContain('background="#FFFFFF"')
-    expect(xml).toContain('<Array as="points"><mxPoint x="400" y="70" as="undefined"/>'.replace(' as="undefined"', ''))
+    expect(xml).toContain('<Array as="points"><mxPoint x="400" y="20" as="undefined"/>'.replace(' as="undefined"', ''))
     expect(xml).not.toContain('html=1')
   })
 
