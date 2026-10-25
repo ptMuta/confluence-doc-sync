@@ -17,7 +17,9 @@ const eaFolder = env('CONFLUENCE_EA_FOLDER')
 const reader = { id: env('CONFLUENCE_TEST_READ_CLIENT_ID'), secret: env('CONFLUENCE_TEST_READ_CLIENT_SECRET') }
 const writer = { id: env('CONFLUENCE_TEST_WRITE_CLIENT_ID'), secret: env('CONFLUENCE_TEST_WRITE_CLIENT_SECRET') }
 const image = process.env.DOCS_SYNC_IMAGE ?? 'docs-sync:live'
-const run = process.env.GITHUB_RUN_ID ?? String(Date.now())
+const run = process.env.GITHUB_RUN_ID
+  ? `${process.env.GITHUB_RUN_ID}-${process.env.GITHUB_RUN_ATTEMPT ?? '1'}`
+  : String(Date.now())
 const key = randomBytes(32).toString('hex')
 const main = resolve('dist/main.mjs')
 const summary = []
