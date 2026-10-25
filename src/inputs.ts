@@ -12,7 +12,7 @@ const gated = [
 ] as const
 type Gated = (typeof gated)[number]
 
-const secrets: readonly Gated[] = ['confluence-client-id', 'confluence-client-secret', 'ownership-key']
+const secrets: readonly Gated[] = ['confluence-client-secret', 'ownership-key']
 
 const accepts: Record<Mode, readonly Gated[]> = {
   check: [],

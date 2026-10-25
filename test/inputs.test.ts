@@ -54,7 +54,7 @@ describe('parseInputs', () => {
         mask,
       ),
     ).toThrow()
-    expect(mask.mock.calls).toEqual([['id'], ['secret'], ['key']])
+    expect(mask.mock.calls).toEqual([['secret'], ['key']])
   })
 
   it('never puts values in errors', () => {
