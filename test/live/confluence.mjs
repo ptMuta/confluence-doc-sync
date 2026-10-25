@@ -122,6 +122,7 @@ confluence:
   site: ${site}
   space: ${space}
   root-page: ${root}
+types: [decisions, requirements, security, logging, monitoring]
 approvers: [docs-approver]
 tags:
   vocabulary: shared/tags.yaml

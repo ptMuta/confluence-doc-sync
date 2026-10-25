@@ -60,3 +60,8 @@ export function* diagrams(blocks: readonly Block[]): Generator<Extract<Block, { 
 }
 
 export const words = (text: string): string[] => text.toLowerCase().match(/[\p{L}\p{N}][\p{L}\p{N}'-]*/gu) ?? []
+
+export const humanize = (name: string): string => {
+  const words = name.replace(/\.md$/, '').replace(/[-_]+/g, ' ')
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}

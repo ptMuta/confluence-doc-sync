@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import type { Root } from '../config/schema.ts'
-import type { Reader } from '../confluence/reader.ts'
+import type { Item, Reader } from '../confluence/reader.ts'
 import { error, type Finding } from '../findings.ts'
 
 export const markerKey = 'docs-sync'
@@ -14,6 +14,7 @@ const markerSchema = z.object({
 
 export interface Owned {
   readonly id: string
+  readonly type: Item['type']
   readonly key: string
   readonly title: string
   readonly parentId: string
@@ -30,14 +31,15 @@ export async function currentState(
   configFile: string,
 ): Promise<{ owned: Owned[]; findings: Finding[] }> {
   const nodes = (await reader.descendants(root.type, root.id)).filter(
-    node => node.type === 'page' && (node.status ?? 'current') === 'current',
+    node => (node.type === 'page' || node.type === 'folder') && (node.status ?? 'current') === 'current',
   )
   const owned: Owned[] = []
   const findings: Finding[] = []
   for (const node of nodes) {
-    const marker = markerSchema.safeParse(await reader.property(node.id, markerKey))
+    const type = node.type === 'folder' ? 'folder' : 'page'
+    const marker = markerSchema.safeParse(await reader.property(type, node.id, markerKey))
     if (!marker.success) continue
-    const page = await reader.item('page', node.id)
+    const page = await reader.item(type, node.id)
     if (!page) continue
     const other = owned.find(item => item.key === marker.data.source)
     if (other) {
@@ -48,12 +50,13 @@ export async function currentState(
     }
     owned.push({
       id: page.id,
+      type,
       key: marker.data.source,
       title: page.title,
       parentId: page.parentId ?? '',
-      version: page.version ?? 0,
+      version: type === 'page' ? (page.version ?? 0) : 0,
       hash: marker.data.hash,
-      edited: page.version !== marker.data.version,
+      edited: type === 'page' && page.version !== marker.data.version,
       markerVersion: marker.data.version,
       ...(marker.data.signature ? { signature: marker.data.signature } : {}),
     })

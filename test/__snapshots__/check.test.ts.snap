@@ -122,13 +122,6 @@ exports[`check > reports every rule with file and line on the bad sample repo 1`
     "severity": "error",
   },
   {
-    "file": "docs/no-front.md",
-    "line": 1,
-    "message": "Front matter is missing",
-    "rule": "frontmatter",
-    "severity": "error",
-  },
-  {
     "file": "docs/other.md",
     "line": 5,
     "message": "Opening paragraph has 17 words; the budget is 5",

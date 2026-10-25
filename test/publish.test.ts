@@ -1,4 +1,4 @@
-import { appendFile, cp, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { appendFile, cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -185,6 +185,49 @@ describe('publish', () => {
     expect(errors((await run()).findings)).toEqual([
       'schema: confluence.root-page: Set either root-page or root-folder',
     ])
+  })
+
+  it('publishes subfolders as Confluence folders', async () => {
+    await mkdir(join(root, 'docs/guides/deep'), { recursive: true })
+    await writeFile(join(root, 'docs/guides/setup.md'), '# Setting up\n\nInstall the action.\n')
+    await writeFile(join(root, 'docs/guides/deep/notes.md'), 'Short notes.\n')
+    confluence.denied.add('delete:folder:confluence')
+    await planned()
+    expect(errors((await run()).findings)).toEqual([
+      'publish/scopes: The token is missing these scopes: delete:folder:confluence',
+    ])
+    confluence.denied.clear()
+    expect(errors((await run({ tier: 'unreviewed' })).findings)[0]).toContain('new folder')
+    await sync()
+
+    const guides = owned('docs/guides/')
+    const deep = owned('docs/guides/deep/')
+    expect([guides.type, guides.title, guides.parentId]).toEqual(['folder', 'Guides', '123456'])
+    expect([deep.type, deep.title, deep.parentId]).toEqual(['folder', 'Deep', guides.id])
+    expect([owned('docs/guides/setup.md').title, owned('docs/guides/setup.md').parentId]).toEqual([
+      'Setting up',
+      guides.id,
+    ])
+    expect(JSON.stringify(owned('docs/guides/setup.md').body)).not.toContain('Setting up')
+    expect([owned('docs/guides/deep/notes.md').title, owned('docs/guides/deep/notes.md').parentId]).toEqual([
+      'Notes',
+      deep.id,
+    ])
+    expect((await planned()).ops).toEqual([])
+
+    await rm(join(root, 'docs/guides'), { recursive: true })
+    await planned()
+    await tamper(draft => {
+      const op = draft.ops.find(item => item.op['folder'])
+      if (op) Reflect.deleteProperty(op.op, 'folder')
+    })
+    expect(errors((await run()).findings)).toContainEqual(expect.stringContaining('is a folder'))
+    await planned()
+    const result = await run()
+    expect(errors(result.findings)).toEqual([])
+    expect(result.applied).toEqual({ create: 0, update: 0, move: 0, archive: 4 })
+    expect(confluence.archived).toEqual(new Set([guides.id, deep.id, expect.any(String), expect.any(String)]))
+    expect((await planned()).ops).toEqual([])
   })
 
   it('publishes diagrams as draw.io macros', async () => {

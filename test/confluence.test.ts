@@ -183,6 +183,6 @@ describe('writer', () => {
 
   it('passes unexpected errors through the write probes', async () => {
     const http = { get: vi.fn(), pages: vi.fn(), send: () => Promise.reject(new Error('network down')) }
-    await expect(missingWriteScopes(http as unknown as WriteHttp)).rejects.toThrow('network down')
+    await expect(missingWriteScopes(http as unknown as WriteHttp, false)).rejects.toThrow('network down')
   })
 })

@@ -86,7 +86,8 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
       at,
       `${at}/permissions?limit=1`,
       `${at}/descendants?limit=1&depth=1`,
-      ...(sourceSpaces.length ? ['/rest/api/content/search?cql=type%3Dfolder&limit=1', '/api/v2/folders/0'] : []),
+      '/api/v2/folders/0',
+      ...(sourceSpaces.length ? ['/rest/api/content/search?cql=type%3Dfolder&limit=1'] : []),
       ...(readers ? ['/rest/api/group/by-id?id=0'] : []),
     ],
     spaceKey,
@@ -118,10 +119,10 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
     ...(server && repo && commit ? { blobUrl: `${server}/${repo}/blob/${commit}` } : {}),
   })
   const state = await currentState(reader, target, configFile)
-  const changes = diff(desired.pages, state.owned, target.id)
+  const changes = diff(desired.pages, desired.folders, state.owned, target.id)
   const titles = new Map<string, string | undefined>()
   for (const op of changes.ops)
-    if (op.kind === 'create' || (op.kind === 'update' && op.changes.includes('title')))
+    if ((op.kind === 'create' && !op.folder) || (op.kind === 'update' && op.changes.includes('title')))
       titles.set(op.title, (await reader.pageByTitle(space.id, op.title))?.id)
   findings.push(
     ...desired.findings,
@@ -134,7 +135,7 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
   const deviating = new Set(sources.decisions.filter(d => d.meta['deviates-from']).map(d => d.file))
   const ops = classify(changes.ops, deviating)
   const risk = overallRisk(config.approval, ops)
-  const touched = new Set(ops.filter(({ op }) => op.kind === 'create' || op.kind === 'update').map(({ op }) => op.key))
+  const touched = new Set(ops.flatMap(({ op }) => (op.kind === 'create' || op.kind === 'update' ? [op.key] : [])))
   const sha256 = await writeBundle(
     bundlePath,
     {

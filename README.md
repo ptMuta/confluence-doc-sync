@@ -1,6 +1,6 @@
 # git-confluence-sync
 
-GitHub Action that checks a repository's structured docs and publishes them to Confluence Cloud: decisions, requirements, security controls, logging, monitoring and draw.io diagrams.
+GitHub Action that checks a repository's docs and publishes them to Confluence Cloud. Docs can be plain Markdown, with opt-in types for decisions, requirements, security controls, logging, monitoring and style rules.
 
 ## How it works
 
@@ -12,7 +12,24 @@ GitHub Action that checks a repository's structured docs and publishes them to C
 
 Publish treats the plan as untrusted. It checks the bundle hash, commit, branch and config, re-classifies risk, re-checks who can view the root, and only changes pages under the root that carry a signed ownership marker.
 
-Risky changes are new, moved or archived pages, overwriting a manual edit in Confluence, and changes to pages with `deviates-from` links.
+## Docs
+
+Every Markdown file under `docs` becomes a page. Front matter is optional: the title comes from `title`, else the first `#` heading, else the file name. Subfolders become Confluence folders. draw.io diagrams embedded in a page are rendered and attached.
+
+Types are opt-in with `types`:
+
+| Type           | Adds                                                                 |
+| -------------- | -------------------------------------------------------------------- |
+| `decisions`    | Decision records in `decisions.folder`, with an index page           |
+| `requirements` | Requirements catalog page                                            |
+| `security`     | Security controls catalog page                                       |
+| `logging`      | Logging catalog page                                                 |
+| `monitoring`   | Monitoring use cases catalog page                                    |
+| `style`        | Length budgets, filler, placeholders, empty sections, duplicate text |
+
+Safety checks always run: broken links and ids, leaked secrets and diagram problems.
+
+Risky changes are new, moved or archived pages, new or deleted folders, overwriting a manual edit in Confluence, and changes to pages with `deviates-from` links.
 
 ## Setup
 
@@ -20,7 +37,7 @@ Risky changes are new, moved or archived pages, overwriting a manual edit in Con
 2. Add CODEOWNERS for `.github/workflows/` and `.docs-sync/`, and require reviews on `main`.
 3. Create two Confluence service account tokens:
    - Read: `read:space:confluence`, `read:page:confluence`, `read:hierarchical-content:confluence`, `read:attachment:confluence`, `read:folder:confluence`, `search:confluence`, `read:space.permission:confluence`, and `read:group:confluence` when `readers` is set.
-   - Write: the read scopes plus `write:page:confluence`, `write:attachment:confluence`, `read:content-details:confluence`, `write:label:confluence`, `read:label:confluence` and `read:content.metadata:confluence`.
+   - Write: the read scopes plus `write:page:confluence`, `write:attachment:confluence`, `read:content-details:confluence`, `write:label:confluence`, `read:label:confluence` and `read:content.metadata:confluence`. Add `write:folder:confluence` and `delete:folder:confluence` when docs have subfolders.
 4. Create GitHub environments, each limited to `main`:
 
 | Environment             | Secrets                                             | Variables                    |
@@ -55,6 +72,7 @@ Required reviewers work only in public repos or on GitHub Enterprise. Elsewhere,
 | `theme`                  | `nord`                  | Built-in theme or a theme file                                                    |
 | `diagram-max-mb`         | `50`                    | Size limit per diagram                                                            |
 | `docs`                   | `docs`                  | Docs folder                                                                       |
+| `types`                  | `[]`                    | Opt-in doc types, see [Docs](#docs)                                               |
 | `decisions`              | `Decision`, `DEC`       | `label`, `id-prefix` and `folder` of decision records                             |
 | `catalogs`               | `docs/<name>.yaml`      | Paths of the requirements, security, logging and monitoring catalogs              |
 | `tags`                   | none                    | Shared `vocabulary` file and `extra` tags                                         |

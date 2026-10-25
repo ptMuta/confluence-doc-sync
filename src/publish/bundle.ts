@@ -12,7 +12,13 @@ const maxDepth = 64
 const id = z.string().regex(/^\d+$/)
 const parent = z.union([z.strictObject({ page: id }), z.strictObject({ key: z.string().min(1) })])
 const op = z.discriminatedUnion('kind', [
-  z.strictObject({ kind: z.literal('create'), key: z.string().min(1), title: z.string().min(1), parent }),
+  z.strictObject({
+    kind: z.literal('create'),
+    key: z.string().min(1),
+    title: z.string().min(1),
+    parent,
+    folder: z.literal(true).optional(),
+  }),
   z.strictObject({
     kind: z.literal('update'),
     key: z.string().min(1),
@@ -21,7 +27,13 @@ const op = z.discriminatedUnion('kind', [
     changes: z.array(z.enum(['content', 'title', 'manual-edit'])).min(1),
   }),
   z.strictObject({ kind: z.literal('move'), key: z.string().min(1), page: id, from: z.string(), to: parent }),
-  z.strictObject({ kind: z.literal('archive'), key: z.string().min(1), page: id, title: z.string() }),
+  z.strictObject({
+    kind: z.literal('archive'),
+    key: z.string().min(1),
+    page: id,
+    title: z.string(),
+    folder: z.literal(true).optional(),
+  }),
 ])
 
 const planSchema = z.strictObject({

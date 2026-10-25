@@ -73,7 +73,7 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
     )
   const pages = new Map(plan.pages.map(page => [page.key, page]))
   const created = new Set(ops.flatMap(({ op }) => (op.kind === 'create' ? [op.key] : [])))
-  const writes = ops.flatMap(({ op }) => (op.kind === 'create' || op.kind === 'update' ? [op.key] : []))
+  const writes = ops.flatMap(({ op }) => ((op.kind === 'create' && !op.folder) || op.kind === 'update' ? [op.key] : []))
   const named = ops.map(({ op }) => `${op.kind} ${op.key}`)
   if (new Set(named).size !== named.length || pages.size !== plan.pages.length)
     problems.push('The plan lists a change or a page twice')
@@ -100,6 +100,8 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
         problems.push(`${where}: page ${op.page} has no valid ownership signature`)
         continue
       }
+      if ((op.kind === 'archive' && op.folder === true) !== (current.type === 'folder'))
+        problems.push(`${where}: ${op.page} is ${current.type === 'folder' ? 'a folder' : 'a page'}`)
       const overwrites = ops.some(
         item => item.op.kind === 'update' && item.op.key === op.key && item.op.changes.includes('manual-edit'),
       )
@@ -109,7 +111,7 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
         problems.push(`${where}: the new parent is not the root or a page this tool owns`)
       if (op.kind === 'archive' && pages.has(op.key)) problems.push(`${where}: the plan also writes this page`)
     }
-    if ((op.kind === 'create' || op.kind === 'update') && pages.get(op.key)?.title !== op.title)
+    if (((op.kind === 'create' && !op.folder) || op.kind === 'update') && pages.get(op.key)?.title !== op.title)
       problems.push(`${where}: the title does not match the page`)
   }
   for (const page of plan.pages)
@@ -189,11 +191,15 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
         `${at}/permissions?limit=1`,
         `${at}/descendants?limit=1&depth=1`,
         '/api/v2/pages/0/attachments?limit=1',
+        '/api/v2/folders/0',
         ...(config.confluence.readers ? ['/rest/api/group/by-id?id=0'] : []),
       ],
       spaceKey,
     )),
-    ...(await missingWriteScopes(http)),
+    ...(await missingWriteScopes(
+      http,
+      ops.some(({ op }) => (op.kind === 'create' || op.kind === 'archive') && op.folder),
+    )),
   ]
   if (missing.length) return fail('publish/scopes', `The token is missing these scopes: ${missing.join(', ')}`)
 
