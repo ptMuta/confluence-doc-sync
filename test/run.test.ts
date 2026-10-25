@@ -19,6 +19,9 @@ vi.mock('../src/plan/plan.ts', () => planner)
 const publisher = vi.hoisted(() => ({ publish: vi.fn() }))
 vi.mock('../src/publish/publish.ts', () => publisher)
 
+const fetcher = vi.fn()
+vi.stubGlobal('fetch', fetcher)
+
 const { run } = await import('../src/run.ts')
 const summary = join(await mkdtemp(join(tmpdir(), 'summary-')), 'summary.md')
 
@@ -27,6 +30,7 @@ describe('run', () => {
     vi.clearAllMocks()
     for (const key of Object.keys(inputs)) Reflect.deleteProperty(inputs, key)
     core.getInput.mockImplementation((name: string) => inputs[name] ?? '')
+    fetcher.mockImplementation(() => Promise.resolve(Response.json({ access_token: 'access' })))
   })
 
   it.each([
@@ -43,28 +47,45 @@ describe('run', () => {
 
   it('needs every publish input', async () => {
     inputs['mode'] = 'publish'
-    inputs['confluence-token'] = 'token'
+    inputs['confluence-client-id'] = 'id'
     await run()
     expect(core.setFailed).toHaveBeenCalledWith('Mode "publish" needs expected-bundle-sha256')
   })
 
-  it('needs a token to plan', async () => {
+  it('needs OAuth credentials to plan', async () => {
     inputs['mode'] = 'plan'
+    inputs['confluence-client-id'] = 'id'
     await run()
-    expect(core.setFailed).toHaveBeenCalledWith('Mode "plan" needs confluence-token')
+    expect(core.setFailed).toHaveBeenCalledWith('Mode "plan" needs confluence-client-id and confluence-client-secret')
+  })
+
+  it('reports a refused OAuth exchange', async () => {
+    Object.assign(inputs, { mode: 'plan', 'confluence-client-id': 'id', 'confluence-client-secret': 'secret' })
+    fetcher.mockResolvedValueOnce(new Response('{"error":"access_denied"}', { status: 401 }))
+    await run()
+    expect(core.setFailed).toHaveBeenCalledWith('POST /oauth/token returned 401: {"error":"access_denied"}')
+    fetcher.mockResolvedValueOnce(Response.json({}))
+    await run()
+    expect(core.setFailed).toHaveBeenCalledWith('Atlassian returned no access token')
   })
 
   it('sets the plan outputs and writes a summary', async () => {
     await writeFile(summary, '')
     vi.stubEnv('GITHUB_STEP_SUMMARY', summary)
-    inputs['mode'] = 'plan'
-    inputs['confluence-token'] = 'token'
+    Object.assign(inputs, { mode: 'plan', 'confluence-client-id': 'id', 'confluence-client-secret': 'secret' })
     planner.plan.mockResolvedValue({
       findings: [],
       outcome: { sha256: 'abc', risk: 'high', ops: [{ op: { kind: 'create' }, risky: 'new page' }], lockChanged: true },
     })
     await run()
     expect(core.setFailed).not.toHaveBeenCalled()
+    expect(planner.plan).toHaveBeenCalledWith(expect.objectContaining({ token: 'access' }))
+    expect(core.setSecret).toHaveBeenCalledWith('access')
+    expect(JSON.parse((fetcher.mock.calls[0] as [string, { body: string }])[1].body)).toEqual({
+      grant_type: 'client_credentials',
+      client_id: 'id',
+      client_secret: 'secret',
+    })
     expect(core.setOutput.mock.calls).toEqual([
       ['bundle-path', 'docs-sync-plan'],
       ['bundle-sha256', 'abc'],
@@ -76,10 +97,10 @@ describe('run', () => {
 
   it('fails on refused inputs and masks secrets', async () => {
     inputs['mode'] = 'check'
-    inputs['confluence-token'] = 'token'
+    inputs['confluence-client-secret'] = 'secret'
     await run()
-    expect(core.setSecret).toHaveBeenCalledWith('token')
-    expect(core.setFailed).toHaveBeenCalledWith('Mode "check" does not accept: confluence-token')
+    expect(core.setSecret).toHaveBeenCalledWith('secret')
+    expect(core.setFailed).toHaveBeenCalledWith('Mode "check" does not accept: confluence-client-secret')
   })
 
   it('reports non-Error throws', async () => {
@@ -95,7 +116,8 @@ describe('run', () => {
     vi.stubEnv('GITHUB_STEP_SUMMARY', summary)
     Object.assign(inputs, {
       mode: 'publish',
-      'confluence-token': 'token',
+      'confluence-client-id': 'id',
+      'confluence-client-secret': 'secret',
       'expected-bundle-sha256': 'abc',
       'environment-tier': 'high-risk',
       'ownership-key': 'key',

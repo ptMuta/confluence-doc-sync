@@ -7,8 +7,10 @@ inputs:
   config:
     description: Path to the config file
     default: .docs-sync/config.yaml
-  confluence-token:
-    description: Scoped Confluence API token (plan, publish)
+  confluence-client-id:
+    description: OAuth client ID of the Confluence service account (plan, publish)
+  confluence-client-secret:
+    description: OAuth client secret of the Confluence service account (plan, publish)
   bundle-path:
     description: Where the plan bundle is written or read (plan, publish)
   expected-bundle-sha256:

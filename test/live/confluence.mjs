@@ -14,8 +14,8 @@ const site = env('CONFLUENCE_SITE')
 const space = env('CONFLUENCE_TEST_SPACE')
 const eaSpace = env('CONFLUENCE_EA_SPACE')
 const eaFolder = env('CONFLUENCE_EA_FOLDER')
-const R = env('CONFLUENCE_SPIKE_READ_TOKEN')
-const W = env('CONFLUENCE_SPIKE_WRITE_TOKEN')
+const reader = { id: env('CONFLUENCE_TEST_READ_CLIENT_ID'), secret: env('CONFLUENCE_TEST_READ_CLIENT_SECRET') }
+const writer = { id: env('CONFLUENCE_TEST_WRITE_CLIENT_ID'), secret: env('CONFLUENCE_TEST_WRITE_CLIENT_SECRET') }
 const image = process.env.DOCS_SYNC_IMAGE ?? 'docs-sync:live'
 const run = process.env.GITHUB_RUN_ID ?? String(Date.now())
 const key = randomBytes(32).toString('hex')
@@ -28,6 +28,19 @@ const say = line => {
 
 const cloud = (await (await fetch(`https://${site}/_edge/tenant_info`, { redirect: 'error' })).json()).cloudId
 const base = `https://api.atlassian.com/ex/confluence/${cloud}/wiki`
+
+async function exchange({ id, secret }) {
+  const res = await fetch('https://auth.atlassian.com/oauth/token', {
+    method: 'POST',
+    redirect: 'error',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ grant_type: 'client_credentials', client_id: id, client_secret: secret }),
+  })
+  if (!res.ok) throw new Error(`OAuth token exchange: ${res.status}`)
+  return (await res.json()).access_token
+}
+const R = await exchange(reader)
+const W = await exchange(writer)
 
 async function call(token, method, path, json) {
   const res = await fetch(base + path, {
@@ -150,14 +163,23 @@ function plan(label) {
       '-e',
       'INPUT_MODE=plan',
       '-e',
-      'INPUT_CONFLUENCE-TOKEN',
+      'INPUT_CONFLUENCE-CLIENT-ID',
+      '-e',
+      'INPUT_CONFLUENCE-CLIENT-SECRET',
       '-e',
       'INPUT_BUNDLE-PATH=bundle',
       '-e',
       'GITHUB_SHA=live',
       image,
     ],
-    { encoding: 'utf8', env: { PATH: process.env.PATH, 'INPUT_CONFLUENCE-TOKEN': R } },
+    {
+      encoding: 'utf8',
+      env: {
+        PATH: process.env.PATH,
+        'INPUT_CONFLUENCE-CLIENT-ID': reader.id,
+        'INPUT_CONFLUENCE-CLIENT-SECRET': reader.secret,
+      },
+    },
   )
   const output = `${result.stdout}${result.stderr}`
   say(`\n### ${label}\n\n\`\`\`\n${notable(output).join('\n')}\n\`\`\``)
@@ -175,7 +197,8 @@ function publish(label, sha, tier, extra = {}) {
     env: {
       PATH: process.env.PATH,
       INPUT_MODE: 'publish',
-      'INPUT_CONFLUENCE-TOKEN': W,
+      'INPUT_CONFLUENCE-CLIENT-ID': writer.id,
+      'INPUT_CONFLUENCE-CLIENT-SECRET': writer.secret,
       'INPUT_BUNDLE-PATH': join(repo, 'bundle'),
       'INPUT_EXPECTED-BUNDLE-SHA256': sha,
       'INPUT_ENVIRONMENT-TIER': tier,

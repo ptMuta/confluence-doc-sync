@@ -56,7 +56,8 @@ jobs:
       - uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: publish
-          confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
+          confluence-client-id: ${{ secrets.CONFLUENCE_WRITE_CLIENT_ID }}
+          confluence-client-secret: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
           bundle-path: docs-sync-plan
           expected-bundle-sha256: ${{ inputs.bundle-sha256 }}
           environment-tier: ${{ vars.DOCS_SYNC_TIER }}

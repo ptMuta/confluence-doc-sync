@@ -47,7 +47,8 @@ jobs:
         uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: plan
-          confluence-token: ${{ secrets.CONFLUENCE_READ_TOKEN }}
+          confluence-client-id: ${{ secrets.CONFLUENCE_READ_CLIENT_ID }}
+          confluence-client-secret: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-sync-plan
@@ -77,7 +78,8 @@ jobs:
       - uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: publish
-          confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
+          confluence-client-id: ${{ secrets.CONFLUENCE_WRITE_CLIENT_ID }}
+          confluence-client-secret: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
           bundle-path: docs-sync-plan
           expected-bundle-sha256: ${{ needs.plan.outputs.bundle-sha256 }}
           environment-tier: ${{ vars.DOCS_SYNC_TIER }}

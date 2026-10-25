@@ -35,17 +35,17 @@ Risky changes are new, moved or archived pages, new or deleted folders, overwrit
 
 1. Copy [`examples/config.yaml`](examples/config.yaml) to `.docs-sync/config.yaml` and [`examples/docs-sync.yml`](examples/docs-sync.yml) to `.github/workflows/`.
 2. Add CODEOWNERS for `.github/workflows/` and `.docs-sync/`, and require reviews on `main`.
-3. Create two Confluence service account tokens:
+3. In admin.atlassian.com, open Directory → Service accounts, and create a service account with access to the space. Give it two OAuth 2.0 credentials with these Confluence scopes:
    - Read: `read:space:confluence`, `read:page:confluence`, `read:hierarchical-content:confluence`, `read:attachment:confluence`, `read:folder:confluence`, `search:confluence`, `read:space.permission:confluence`, and `read:group:confluence` when `readers` is set.
    - Write: the read scopes plus `write:page:confluence`, `write:attachment:confluence`, `read:content-details:confluence`, `write:label:confluence`, `read:label:confluence` and `read:content.metadata:confluence`. Add `write:folder:confluence` and `delete:folder:confluence` when docs have subfolders.
 4. Create GitHub environments, each limited to `main`:
 
-| Environment                   | Secrets                                                       | Variables                   |
-| ----------------------------- | ------------------------------------------------------------- | --------------------------- |
-| `docs-sync-read`              | `CONFLUENCE_READ_TOKEN`                                       | none                        |
-| `docs-sync-publish-low-risk`  | `CONFLUENCE_WRITE_TOKEN`, `DOCS_SYNC_OWNERSHIP_KEY`           | `DOCS_SYNC_TIER: low-risk`  |
-| `docs-sync-publish-high-risk` | same as `docs-sync-publish-low-risk`, with required reviewers | `DOCS_SYNC_TIER: high-risk` |
-| `docs-sync-publish-manual`    | same as `docs-sync-publish-low-risk`                          | `DOCS_SYNC_TIER: manual`    |
+| Environment                   | Secrets                                                                                   | Variables                   |
+| ----------------------------- | ----------------------------------------------------------------------------------------- | --------------------------- |
+| `docs-sync-read`              | `CONFLUENCE_READ_CLIENT_ID`, `CONFLUENCE_READ_CLIENT_SECRET`                              | none                        |
+| `docs-sync-publish-low-risk`  | `CONFLUENCE_WRITE_CLIENT_ID`, `CONFLUENCE_WRITE_CLIENT_SECRET`, `DOCS_SYNC_OWNERSHIP_KEY` | `DOCS_SYNC_TIER: low-risk`  |
+| `docs-sync-publish-high-risk` | same as `docs-sync-publish-low-risk`, with required reviewers                             | `DOCS_SYNC_TIER: high-risk` |
+| `docs-sync-publish-manual`    | same as `docs-sync-publish-low-risk`                                                      | `DOCS_SYNC_TIER: manual`    |
 
 `DOCS_SYNC_OWNERSHIP_KEY` is a random string of at least 32 characters, for example `openssl rand -hex 32`. Use the same key in every publish environment.
 
