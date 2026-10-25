@@ -13,8 +13,8 @@ Run the release workflow on main with a version such as v1.0.0, or v1.0.0-rc.1 f
 Verify a release:
 
 ```sh
-gh release verify v1.0.0 -R ptMuta/git-confluence-sync
-gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -R ptMuta/git-confluence-sync
+gh release verify v1.0.0 -R ptMuta/confluence-doc-sync
+gh attestation verify oci://ghcr.io/ptmuta/confluence-doc-sync@sha256:<digest> -R ptMuta/confluence-doc-sync
 ```
 
 ## Nightly and cleanup

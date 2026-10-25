@@ -50,7 +50,7 @@ jobs:
         with:
           persist-credentials: false
       - id: plan
-        uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+        uses: ptMuta/confluence-doc-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
         with:
           mode: plan
           confluence-client-id: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
@@ -81,7 +81,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           REPO: ${{ github.repository }}
         run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
-      - uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+      - uses: ptMuta/confluence-doc-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
         with:
           mode: publish
           confluence-client-id: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}

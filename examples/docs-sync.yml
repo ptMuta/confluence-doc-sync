@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
+      - uses: ptMuta/confluence-doc-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: check
 
@@ -44,7 +44,7 @@ jobs:
         with:
           persist-credentials: false
       - id: plan
-        uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
+        uses: ptMuta/confluence-doc-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: plan
           confluence-client-id: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
@@ -75,7 +75,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           REPO: ${{ github.repository }}
         run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
-      - uses: ptMuta/git-confluence-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
+      - uses: ptMuta/confluence-doc-sync@97410049047ee06cac4d8e83afcb9e4fafc45af7 # replace with a release commit
         with:
           mode: publish
           confluence-client-id: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}

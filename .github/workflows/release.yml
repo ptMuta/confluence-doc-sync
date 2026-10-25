@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE: ghcr.io/ptmuta/git-confluence-sync
+  IMAGE: ghcr.io/ptmuta/confluence-doc-sync
 
 jobs:
   version:
@@ -126,7 +126,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       GH_TOKEN: ${{ github.token }}
-      PACKAGE: users/${{ github.repository_owner }}/packages/container/git-confluence-sync/versions
+      PACKAGE: users/${{ github.repository_owner }}/packages/container/confluence-doc-sync/versions
     steps:
       - run: |
           tags=$(gh release list -R "$GITHUB_REPOSITORY" -L 1000 --json tagName -q '.[].tagName')
