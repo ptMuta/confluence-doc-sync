@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version tag, for example v1.0.0
+        description: Version tag, for example v1.0.0 or v1.0.0-rc.1
         required: true
 
 permissions: {}
@@ -73,4 +73,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Release $VERSION" action.yml
           git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/tags/$VERSION"
-          gh release create "$VERSION" --verify-tag --generate-notes --title "$VERSION" --notes "Image: \`$IMAGE@$DIGEST\`"
+          prerelease=$([[ "$VERSION" == *-rc.* ]] && echo --prerelease || echo --latest)
+          gh release create "$VERSION" "$prerelease" --verify-tag --generate-notes --title "$VERSION" --notes "Image: \`$IMAGE@$DIGEST\`"
