@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-args=()
-while IFS= read -r name; do args+=(-e "$name"); done < <(env | grep -oE '^(INPUT_[A-Z0-9_-]+|GITHUB_[A-Z_]+|RUNNER_[A-Z_]+)=' | tr -d =)
-exec docker run --rm "${args[@]}" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v "$RUNNER_TEMP:$RUNNER_TEMP" -w "$GITHUB_WORKSPACE" "$IMAGE_REF"
+envs=$(mktemp "$RUNNER_TEMP/env.XXXXXX")
+trap 'rm -f "$envs"' EXIT
+while IFS='=' read -r name value; do
+  if [[ "$name" == INPUT_* ]]; then
+    printf 'INPUT_%s=%s\n' "$(tr _ - <<< "${name#INPUT_}")" "$value"
+  else
+    printf '%s=%s\n' "$name" "$value"
+  fi
+done < <(env | grep -E '^(INPUT|GITHUB|RUNNER)_[A-Z0-9_]+=' | grep -v '^GITHUB_TOKEN=') > "$envs"
+docker run --rm --env-file "$envs" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -v "$RUNNER_TEMP:$RUNNER_TEMP" -w "$GITHUB_WORKSPACE" "$IMAGE_REF"
