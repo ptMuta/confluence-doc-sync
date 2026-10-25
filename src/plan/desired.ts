@@ -5,15 +5,12 @@ import { prepare } from '../diagrams/prepare.ts'
 import type { Renderer } from '../diagrams/render/drawio.ts'
 import type { Theme } from '../diagrams/theme.ts'
 import { error, type Finding } from '../findings.ts'
-import type { Node, Resolver } from '../render/adf.ts'
+import { pageHref, type Node, type Resolver } from '../render/adf.ts'
 import { humanize } from '../model/text.ts'
 import { folderOf, renderPages } from '../render/pages.ts'
 import type { Resolved } from '../refs/resolve.ts'
 import type { Sources } from '../source/load.ts'
 import { canonical, sha256 } from './hash.ts'
-
-const pageHref = (key: string, anchor?: string): string =>
-  `docs-sync:page/${encodeURIComponent(key)}${anchor ? `#${anchor}` : ''}`
 
 const attachmentPrefix = 'docs-sync:attachment/'
 export const pageIdPlaceholder = 'docs-sync:page-id'
@@ -44,6 +41,7 @@ export interface DesiredFolder {
 export interface Desired {
   readonly pages: readonly DesiredPage[]
   readonly folders: readonly DesiredFolder[]
+  readonly overviews: ReadonlySet<string>
   readonly images: ReadonlyMap<string, Image>
   readonly findings: Finding[]
 }
@@ -183,7 +181,8 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
     ...(macro ? [source] : []),
   ])
   const byName = new Map(files.map(image => [image.name, image]))
-  const pages = renderPages(config, sources, resolver).map(page => ({
+  const rendered = renderPages(config, sources, resolver)
+  const pages = rendered.map(page => ({
     key: page.key,
     title: page.title,
     ...(page.parent ? { parent: page.parent } : {}),
@@ -204,6 +203,7 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
   return {
     pages,
     folders: foldersOf(pages, config.docs),
+    overviews: new Set(rendered.flatMap(page => (page.overview ? [page.key] : []))),
     images: byName,
     findings,
   }

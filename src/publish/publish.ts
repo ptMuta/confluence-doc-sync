@@ -86,6 +86,12 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
 
   for (const { op } of ops) {
     const where = `${op.kind} ${op.key}`
+    if (op.kind === 'order') {
+      const current = byKey.get(op.key)
+      if (op.page ? current?.id !== op.page || !signed(current) : !created.has(op.key))
+        problems.push(`${where}: the page is not one this tool owns or creates`)
+      continue
+    }
     if (op.kind === 'create') {
       const other = byKey.get(op.key)
       if (other) problems.push(`${where}: page ${other.id} already holds this source`)
@@ -233,6 +239,12 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
   const count = (kind: Op['kind']) => ops.filter(({ op }) => op.kind === kind).length
   return {
     findings,
-    applied: { create: count('create'), update: count('update'), move: count('move'), archive: count('archive') },
+    applied: {
+      create: count('create'),
+      update: count('update'),
+      move: count('move'),
+      order: count('order'),
+      archive: count('archive'),
+    },
   }
 }

@@ -27,6 +27,7 @@ const op = z.discriminatedUnion('kind', [
     changes: z.array(z.enum(['content', 'title', 'manual-edit'])).min(1),
   }),
   z.strictObject({ kind: z.literal('move'), key: z.string().min(1), page: id, from: z.string(), to: parent }),
+  z.strictObject({ kind: z.literal('order'), key: z.string().min(1), page: id.optional() }),
   z.strictObject({
     kind: z.literal('archive'),
     key: z.string().min(1),
@@ -95,6 +96,10 @@ const blocks = new Set([
   'hardBreak',
   'inlineExtension',
   'extension',
+  'layoutSection',
+  'layoutColumn',
+  'status',
+  'date',
 ])
 const marks = new Set(['strong', 'em', 'strike', 'code', 'link'])
 const nodeKeys = new Set(['type', 'attrs', 'content', 'marks', 'text'])

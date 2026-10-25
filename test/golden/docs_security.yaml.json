@@ -53,36 +53,6 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Applies to"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Enforced by"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
                       "text": "Requirement"
                     }
                   ]
@@ -102,28 +72,16 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "inlineExtension",
-                      "attrs": {
-                        "extensionType": "com.atlassian.confluence.macro.core",
-                        "extensionKey": "anchor",
-                        "parameters": {
-                          "macroParams": {
-                            "": {
-                              "value": "SEC-001"
-                            }
-                          },
-                          "macroMetadata": {
-                            "schemaVersion": {
-                              "value": "1"
-                            },
-                            "title": "Anchor"
+                      "type": "text",
+                      "text": "SEC-001",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "docs-sync:page/docs%2Fsecurity.yaml#SEC-001"
                           }
                         }
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "text": "SEC-001"
+                      ]
                     }
                   ]
                 }
@@ -153,7 +111,137 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "modules/ledger"
+                      "text": "NFR-SEC-004",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "https://example.atlassian.net/wiki/x/NFR-SEC-004"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "com.atlassian.confluence.macro.core",
+            "extensionKey": "anchor",
+            "parameters": {
+              "macroParams": {
+                "": {
+                  "value": "SEC-001"
+                }
+              },
+              "macroMetadata": {
+                "schemaVersion": {
+                  "value": "1"
+                },
+                "title": "Anchor"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "SEC-001"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Data stores accept traffic only from private endpoints."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Applies to"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "modules/ledger",
+                      "marks": [
+                        {
+                          "type": "code"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Enforced by"
                     }
                   ]
                 }
@@ -171,12 +259,35 @@
                       "text": "policy/no-secrets.rego",
                       "marks": [
                         {
+                          "type": "code"
+                        },
+                        {
                           "type": "link",
                           "attrs": {
                             "href": "https://github.com/acme/payments/blob/main/policy/no-secrets.rego"
                           }
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Requirement"
                     }
                   ]
                 }

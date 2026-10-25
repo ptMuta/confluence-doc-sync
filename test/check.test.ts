@@ -7,8 +7,7 @@ import { check } from '../src/check.ts'
 const fixtures = join(import.meta.dirname, 'fixtures')
 const config = '.docs-sync/config.yaml'
 
-const base = `system: Payments
-confluence: { site: example.atlassian.net, space: DOCS, root-page: 1 }
+const base = `confluence: { site: example.atlassian.net, space: DOCS, root-page: 1 }
 types: [decisions, requirements, security, logging, monitoring, writing-rules]
 `
 
@@ -69,8 +68,8 @@ describe('check', () => {
   })
 
   it.each([
-    ['bad yaml', 'system: [', 'yaml'],
-    ['bad schema', 'system: Payments', 'schema'],
+    ['bad yaml', 'confluence: [', 'yaml'],
+    ['bad schema', 'confluence: { site: bad, space: DOCS, root-page: "1" }', 'schema'],
   ])('reports a config with %s', async (_, text, rule) => {
     expect(await rules({ [config]: text })).toEqual([rule])
   })

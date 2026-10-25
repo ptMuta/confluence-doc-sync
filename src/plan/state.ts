@@ -22,6 +22,7 @@ export interface Owned {
   readonly hash: string
   readonly edited: boolean
   readonly markerVersion: number
+  readonly first: boolean
   readonly signature?: string
 }
 
@@ -33,6 +34,11 @@ export async function currentState(
   const nodes = (await reader.descendants(root.type, root.id)).filter(
     node => (node.type === 'page' || node.type === 'folder') && (node.status ?? 'current') === 'current',
   )
+  const firsts = new Map<string, (typeof nodes)[number]>()
+  for (const node of nodes) {
+    const other = firsts.get(node.parentId ?? '')
+    if (!other || (node.childPosition ?? 0) < (other.childPosition ?? 0)) firsts.set(node.parentId ?? '', node)
+  }
   const owned: Owned[] = []
   const findings: Finding[] = []
   for (const node of nodes) {
@@ -58,6 +64,7 @@ export async function currentState(
       hash: marker.data.hash,
       edited: type === 'page' && page.version !== marker.data.version,
       markerVersion: marker.data.version,
+      first: firsts.get(node.parentId ?? '')?.id === node.id,
       ...(marker.data.signature ? { signature: marker.data.signature } : {}),
     })
   }

@@ -102,10 +102,10 @@ describe('publish', () => {
   })
 
   it('publishes a full sync, then nothing on a re-run', async () => {
-    expect((await planned()).ops).toHaveLength(9)
+    expect((await planned()).ops).toHaveLength(11)
     const result = await run()
     expect(errors(result.findings)).toEqual([])
-    expect(result.applied).toEqual({ create: 9, update: 0, move: 0, archive: 0 })
+    expect(result.applied).toEqual({ create: 9, update: 0, move: 0, order: 2, archive: 0 })
 
     const overview = owned('docs/overview.md')
     expect(overview.marker).toEqual({
@@ -126,7 +126,7 @@ describe('publish', () => {
 
     expect((await planned()).ops).toEqual([])
     confluence.writes.length = 0
-    expect((await run({ tier: 'low-risk' })).applied).toEqual({ create: 0, update: 0, move: 0, archive: 0 })
+    expect((await run({ tier: 'low-risk' })).applied).toEqual({ create: 0, update: 0, move: 0, order: 0, archive: 0 })
     expect(confluence.writes).toEqual([])
 
     await source('docs/overview.md', text => text.replace('two regions', 'three regions'))
@@ -164,7 +164,7 @@ describe('publish', () => {
 
     const result = await run()
     expect(errors(result.findings)).toEqual([])
-    expect(result.applied).toEqual({ create: 0, update: 1, move: 1, archive: 1 })
+    expect(result.applied).toEqual({ create: 0, update: 1, move: 1, order: 0, archive: 1 })
     expect(owned('docs/logging.yaml').parentId).toBe('123456')
     expect(owned('docs/monitoring.yaml').labels).toEqual([])
     expect(confluence.archived).toEqual(new Set(['6000']))
@@ -225,8 +225,9 @@ describe('publish', () => {
     await planned()
     const result = await run()
     expect(errors(result.findings)).toEqual([])
-    expect(result.applied).toEqual({ create: 0, update: 0, move: 0, archive: 4 })
-    expect(confluence.archived).toEqual(new Set([guides.id, deep.id, expect.any(String), expect.any(String)]))
+    expect(result.applied).toEqual({ create: 0, update: 0, move: 0, order: 0, archive: 6 })
+    expect([...confluence.archived]).toEqual(expect.arrayContaining([guides.id, deep.id]))
+    expect(confluence.archived.size).toBe(6)
     expect((await planned()).ops).toEqual([])
   })
 

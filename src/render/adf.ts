@@ -47,7 +47,7 @@ export const paragraph = (content: readonly Node[]): Node => ({
   }, []),
 })
 
-const heading = (level: number, content: readonly Node[]): Node => ({
+export const heading = (level: number, content: readonly Node[]): Node => ({
   type: 'heading',
   attrs: { level },
   content,
@@ -58,7 +58,7 @@ export const bulletList = (items: readonly (readonly Node[])[]): Node => ({
   content: items.map(content => ({ type: 'listItem', content })),
 })
 
-export const panel = (panelType: 'info' | 'note' | 'warning', content: readonly Node[]): Node => ({
+export const panel = (panelType: 'info' | 'note' | 'warning' | 'error', content: readonly Node[]): Node => ({
   type: 'panel',
   attrs: { panelType },
   content,
@@ -76,6 +76,33 @@ export const table = (header: readonly (readonly Node[])[], rows: readonly (read
   }
 }
 
+export const properties = (rows: readonly (readonly [string, readonly Node[]])[]): Node => ({
+  type: 'table',
+  attrs: { isNumberColumnEnabled: false, layout: 'default' },
+  content: rows.map(([label, value]) => ({
+    type: 'tableRow',
+    content: [
+      { type: 'tableHeader', attrs: {}, content: [paragraph(text(label))] },
+      { type: 'tableCell', attrs: {}, content: [paragraph(value)] },
+    ],
+  })),
+})
+
+export const sidebar = (main: readonly Node[], side: readonly Node[]): Node => ({
+  type: 'layoutSection',
+  content: [
+    { type: 'layoutColumn', attrs: { width: 66.66 }, content: main },
+    { type: 'layoutColumn', attrs: { width: 33.33 }, content: side },
+  ],
+})
+
+export const status = (label: string, color: 'green' | 'neutral' | 'red' | 'yellow'): Node => ({
+  type: 'status',
+  attrs: { text: label, color },
+})
+
+export const date = (value: string): Node => ({ type: 'date', attrs: { timestamp: String(Date.parse(value)) } })
+
 export const anchor = (name: string): Node => ({
   type: 'inlineExtension',
   attrs: {
@@ -88,8 +115,12 @@ export const anchor = (name: string): Node => ({
   },
 })
 
-export const link = (label: string, href: string | undefined): Node[] =>
-  text(label, href ? [{ type: 'link', attrs: { href } }] : [])
+export const pageHref = (key: string, anchor?: string): string =>
+  `docs-sync:page/${encodeURIComponent(key)}${anchor ? `#${anchor}` : ''}`
+
+export const linkMark = (href: string | undefined): Mark[] => (href ? [{ type: 'link', attrs: { href } }] : [])
+
+export const link = (label: string, href: string | undefined): Node[] => text(label, linkMark(href))
 
 export const refLink = (id: string, resolver: Resolver, marks: readonly Mark[] = []): Node[] => {
   const target = resolver.ref(id)

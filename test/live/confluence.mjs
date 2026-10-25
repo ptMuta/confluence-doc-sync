@@ -132,8 +132,7 @@ for (const file of readdirSync(join(repo, 'docs'), { recursive: true }).map(name
 }
 writeFileSync(
   join(repo, '.docs-sync/config.yaml'),
-  `system: Publish check ${run}
-confluence:
+  `confluence:
   site: ${site}
   space: ${space}
   root-page: ${root}
@@ -232,11 +231,14 @@ const expect = (name, actual, wanted) => {
 const refused = (name, result, text) => expect(name, !result.ok && result.errors.includes(text), true)
 
 const tree = async () => (await call(R, 'GET', `/api/v2/pages/${root}/descendants?limit=250`)).results
+const pagesOnly = async () => (await tree()).filter(item => item.type === 'page')
 const versions = async () =>
-  (await Promise.all((await tree()).map(async item => `${item.id}:${(await page(item.id)).version.number}`))).sort()
+  (
+    await Promise.all((await pagesOnly()).map(async item => `${item.id}:${(await page(item.id)).version.number}`))
+  ).sort()
 const owned = async () => {
   const pages = new Map()
-  for (const item of await tree()) {
+  for (const item of await pagesOnly()) {
     const marker = (await props(item.id))?.value
     if (marker?.source) pages.set(marker.source, { id: item.id, marker })
   }
@@ -364,6 +366,8 @@ try {
   await call(W, 'POST', '/rest/api/content/archive', { pages: ids.map(id => ({ id: Number(id) })) }).catch(cause =>
     say(`\nCleanup failed: ${cause.message}`),
   )
+  for (const item of all.filter(entry => entry.type === 'folder').reverse())
+    await call(W, 'DELETE', `/api/v2/folders/${item.id}`).catch(cause => say(`\nCleanup failed: ${cause.message}`))
   appendFileSync(process.env.GITHUB_STEP_SUMMARY ?? '/dev/null', `## Publish check\n${summary.join('\n')}\n`)
   if (failed) process.exitCode = 1
 }

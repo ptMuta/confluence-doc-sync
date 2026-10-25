@@ -86,6 +86,18 @@ export async function apply(input: ApplyInput): Promise<void> {
     await sign(op.page, op.key, owned.find(page => page.key === op.key)?.hash ?? '', await version(op.page))
   }
 
+  for (const { op } of ops) {
+    if (op.kind !== 'order') continue
+    const id = ids.get(op.key) ?? ''
+    const page = await reader.item('page', id)
+    const [first] = page?.parentId
+      ? await reader.children(page.parentType === 'folder' ? 'folder' : 'page', page.parentId)
+      : []
+    if (!first || first.id === id) continue
+    await writer.moveBefore(id, first.id)
+    await sign(id, op.key, owned.find(item => item.key === op.key)?.hash ?? '', await version(id))
+  }
+
   const link = (href: string) => {
     const [path = '', anchor] = href.slice(pagePrefix.length).split('#')
     const target = ids.get(decodeURIComponent(path))

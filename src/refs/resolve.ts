@@ -30,7 +30,7 @@ async function folderId(reader: Reader, space: string, path: string): Promise<st
   if (roots.length !== 1) return roots.map(node => node.id)
   let id = roots[0]?.id ?? ''
   for (const segment of rest) {
-    const next = (await reader.children(id)).filter(node => node.type === 'folder' && node.title === segment)
+    const next = (await reader.children('folder', id)).filter(node => node.type === 'folder' && node.title === segment)
     if (next.length !== 1) return next.map(node => node.id)
     id = next[0]?.id ?? ''
   }

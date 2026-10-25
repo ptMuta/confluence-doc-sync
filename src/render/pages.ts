@@ -1,17 +1,25 @@
 import { posix } from 'node:path'
 import type { Config } from '../config/schema.ts'
+import { humanize } from '../model/text.ts'
 import type { Decision, Sources } from '../source/load.ts'
 import { catalogKinds, catalogSchemas, linkFields, type CatalogKind } from '../source/schemas.ts'
 import {
   anchor,
   bulletList,
   convert,
+  date,
   doc,
+  heading,
   joined,
   link,
+  linkMark,
+  pageHref,
   panel,
   paragraph,
+  properties,
   refLink,
+  sidebar,
+  status,
   table,
   text,
   type Node,
@@ -24,6 +32,7 @@ export interface RenderedPage {
   readonly parent?: string
   readonly labels: readonly string[]
   readonly body: Node
+  readonly overview?: true
 }
 
 const catalogTitles: Record<CatalogKind, string> = {
@@ -38,8 +47,6 @@ export function folderOf(path: string, docs: string): string | undefined {
   return dir && !dir.startsWith('..') ? `${posix.join(docs, dir)}/` : undefined
 }
 
-const label = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
-
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort()
 
 const strings = (value: unknown): string[] =>
@@ -50,11 +57,14 @@ const columnName = (key: string): string => {
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
+const sentence = (value: string): string => (/[.!?]$/.test(value) ? value : `${value}.`)
+
 interface Upstream {
   readonly ref: string
   readonly relation: 'realizes' | 'constrained-by' | 'deviates-from'
   readonly from: string
   readonly note?: string
+  readonly reason?: string
 }
 
 function upstream(sources: Sources): Upstream[] {
@@ -70,14 +80,13 @@ function upstream(sources: Sources): Upstream[] {
         ref: deviation.ref,
         relation: 'deviates-from',
         from: decision.meta.id,
-        note: `${deviation.reason} (approved by ${deviation['approved-by']})`,
+        note: `${sentence(deviation.reason)} Approved by ${deviation['approved-by']}.`,
+        reason: deviation.reason,
       })
   }
   for (const entry of sources.entries) add(entry.value.id, entry.value)
   return links
 }
-
-const relations = { realizes: 'Realizes', 'constrained-by': 'Constrained by', 'deviates-from': 'Deviates from' }
 
 function decisionPage(
   decision: Decision,
@@ -87,81 +96,127 @@ function decisionPage(
 ): RenderedPage {
   const { meta } = decision
   const own = links.filter(item => item.from === meta.id)
-  const content: Node[] = []
-  if (own.length)
-    content.push(
-      panel('info', [
-        paragraph(text('Upstream decisions', [{ type: 'strong' }])),
-        bulletList(
-          own.map(item => [
-            paragraph([
-              ...text(`${relations[item.relation]} `),
-              ...refLink(item.ref, resolver),
-              ...text(item.note ? `: ${item.note}` : ''),
-            ]),
-          ]),
-        ),
+  const related = (relation: Upstream['relation']) =>
+    joined(own.filter(item => item.relation === relation).map(item => refLink(item.ref, resolver)))
+  const banners: Node[] = []
+  if (meta['superseded-by'])
+    banners.push(panel('info', [paragraph([...text('Replaced by '), ...refLink(meta['superseded-by'], resolver)])]))
+  if (meta.retired)
+    banners.push(
+      panel('error', [
+        paragraph([...text('Retired on '), date(meta.retired.date), ...text(`: ${sentence(meta.retired.reason)}`)]),
       ]),
     )
-  if (meta['superseded-by'])
-    content.push(
-      panel('warning', [paragraph([...text('Superseded by '), ...refLink(meta['superseded-by'], resolver)])]),
+  for (const item of own.filter(link => link.relation === 'deviates-from'))
+    banners.push(
+      panel('warning', [
+        paragraph([
+          ...text('Deviates from ', [{ type: 'strong' }]),
+          ...refLink(item.ref, resolver, [{ type: 'strong' }]),
+        ]),
+        paragraph(text(item.note ?? '')),
+      ]),
     )
-  if (meta.retired)
-    content.push(panel('warning', [paragraph(text(`Retired on ${meta.retired.date}: ${meta.retired.reason}`))]))
-  content.push(
-    paragraph([
-      ...text(`Date: ${meta.date} · Decision makers: ${meta['decision-makers'].join(', ')}`),
-      ...(meta.supersedes ? [...text(' · Supersedes '), ...refLink(meta.supersedes, resolver)] : []),
-    ]),
-    ...convert(decision.blocks, decision.file, resolver),
-  )
+  const rows: [string, Node[]][] = [
+    ['Status', [state(decision)]],
+    ['Date', [date(meta.date)]],
+    ['Decision makers', text(meta['decision-makers'].join(', '))],
+  ]
+  if (meta.supersedes) rows.push(['Supersedes', refLink(meta.supersedes, resolver)])
+  if (own.some(item => item.relation === 'realizes')) rows.push(['Realizes', related('realizes')])
+  if (own.some(item => item.relation === 'constrained-by')) rows.push(['Constrained by', related('constrained-by')])
   return {
     key: decision.file,
     title: `${meta.id} ${meta.title}`,
     parent,
-    labels: sorted([...(meta.tags ?? []), ...own.map(item => label(item.ref))]),
-    body: doc(content),
+    labels: sorted(meta.tags ?? []),
+    body: doc([sidebar([...banners, ...convert(decision.blocks, decision.file, resolver)], [properties(rows)])]),
   }
 }
 
-const state = (decision: Decision, resolver: Resolver): Node[] => {
+const state = (decision: Decision): Node => {
   const { meta } = decision
-  if (meta['superseded-by']) return [...text('Superseded by '), ...refLink(meta['superseded-by'], resolver)]
-  if (meta.retired) return text(`Retired ${meta.retired.date}`)
-  return text('In force')
+  if (meta['superseded-by']) return status('Superseded', 'neutral')
+  if (meta.retired) return status('Retired', 'red')
+  return status('Active', 'green')
 }
 
+const summaries: Record<CatalogKind, readonly string[]> = {
+  requirements: ['statement', 'priority'],
+  security: ['control', 'requirement'],
+  logging: ['events', 'destination'],
+  monitoring: ['symptom', 'severity'],
+}
+
+const priorities = { must: 'red', should: 'yellow', could: 'neutral' } as const
+
 function catalogPage(kind: CatalogKind, entries: Sources['entries'], config: Config, resolver: Resolver): RenderedPage {
-  const fields = Object.keys(catalogSchemas[kind].shape).filter(
-    key => key !== 'tags' && entries.some(entry => entry.value[key] !== undefined),
-  )
+  const file = config.catalogs[kind]
+  const [primary = ''] = summaries[kind]
   const cell = (key: string, value: unknown): Node[] => {
     const values = strings(value)
-    if (key === 'id') return [anchor(values.join('')), ...text(values.join(''))]
+    if (key === 'priority') return values.map(item => status(item, priorities[item as keyof typeof priorities]))
     if (['realizes', 'constrained-by', 'requirement', 'covers'].includes(key))
       return joined(values.map(ref => refLink(ref, resolver)))
     if (linkFields[kind].includes(key))
-      return joined(values.map(target => link(target, target.startsWith('https://') ? target : resolver.path(target))))
+      return joined(
+        values.map(target =>
+          target.startsWith('https://')
+            ? link(target, target)
+            : text(target, [{ type: 'code' }, ...linkMark(resolver.path(target))]),
+        ),
+      )
+    if (key === 'applies-to') return joined(values.map(item => text(item, [{ type: 'code' }])))
     return text(values.join(', '))
   }
-  const file = config.catalogs[kind]
+  const fields = Object.keys(catalogSchemas[kind].shape).filter(key => !['id', 'tags', primary].includes(key))
   return {
     key: file,
-    title: `${config.system}: ${catalogTitles[kind]}`,
-    labels: sorted(
-      entries.flatMap(entry => [
-        ...(entry.value.tags ?? []),
-        ...[...strings(entry.value['realizes']), ...strings(entry.value['constrained-by'])].map(label),
-      ]),
-    ),
+    title: catalogTitles[kind],
+    labels: sorted(entries.flatMap(entry => entry.value.tags ?? [])),
     body: doc([
       table(
-        fields.map(key => text(key === 'id' ? 'Id' : columnName(key))),
-        entries.map(entry => fields.map(key => cell(key, entry.value[key]))),
+        ['Id', ...summaries[kind]].map(key => text(key === 'id' ? 'Id' : columnName(key))),
+        entries.map(entry => [
+          link(entry.value.id, pageHref(file, entry.value.id)),
+          ...summaries[kind].map(key => cell(key, entry.value[key])),
+        ]),
       ),
+      heading(2, text('Details')),
+      ...entries.flatMap(entry => {
+        const present = fields.filter(key => entry.value[key] !== undefined)
+        return [
+          heading(3, [anchor(entry.value.id), ...text(entry.value.id)]),
+          paragraph(cell(primary, entry.value[primary])),
+          ...(present.length
+            ? [properties(present.map(key => [columnName(key), cell(key, entry.value[key])] as const))]
+            : []),
+        ]
+      }),
     ]),
   }
+}
+
+function upstreamTable(links: readonly Upstream[], resolver: Resolver): Node[] {
+  if (!links.length) return []
+  const by = (ref: string, relation: Upstream['relation']) =>
+    joined(
+      links
+        .filter(item => item.ref === ref && item.relation === relation)
+        .map(item => [...refLink(item.from, resolver), ...text(item.reason ? `: ${item.reason}` : '')]),
+    )
+  return [
+    heading(2, text('Upstream decisions')),
+    table(
+      [text('Upstream decision'), text('Realized by'), text('Constrained'), text('Deviations')],
+      sorted(links.map(item => item.ref)).map(ref => [
+        refLink(ref, resolver),
+        by(ref, 'realizes'),
+        by(ref, 'constrained-by'),
+        by(ref, 'deviates-from'),
+      ]),
+    ),
+  ]
 }
 
 export function renderPages(config: Config, sources: Sources, resolver: Resolver): RenderedPage[] {
@@ -178,22 +233,25 @@ export function renderPages(config: Config, sources: Sources, resolver: Resolver
   })
 
   if (sources.decisions.length) {
-    const section = config.decisions.folder
+    const section = `${config.decisions.folder}/`
     const decisions = [...sources.decisions].sort((a, b) => a.meta.id.localeCompare(b.meta.id))
     pages.push({
-      key: section,
-      title: `${config.system}: ${config.decisions.label}s`,
+      key: config.decisions.folder,
+      title: `${humanize(posix.basename(config.decisions.folder))} overview`,
+      parent: section,
+      overview: true,
       labels: [],
       body: doc([
         table(
-          [text('Id'), text('Title'), text('Date'), text('State')],
+          [text('Id'), text('Decision'), text('Date'), text('Status')],
           decisions.map(decision => [
-            refLink(decision.meta.id, resolver),
-            text(decision.meta.title),
-            text(decision.meta.date),
-            state(decision, resolver),
+            text(decision.meta.id),
+            link(decision.meta.title, pageHref(decision.file)),
+            [date(decision.meta.date)],
+            [state(decision)],
           ]),
         ),
+        ...upstreamTable(links, resolver),
       ]),
     })
     pages.push(...decisions.map(decision => decisionPage(decision, links, resolver, section)))
@@ -203,31 +261,48 @@ export function renderPages(config: Config, sources: Sources, resolver: Resolver
     const entries = sources.entries.filter(entry => entry.catalog === kind)
     if (entries.length) pages.push(catalogPage(kind, entries, config, resolver))
   }
+  return withOverviews(pages, config.docs)
+}
 
-  if (links.length) {
-    const refs = sorted(links.map(item => item.ref))
-    const by = (ref: string, relation: Upstream['relation']) =>
-      joined(
-        links
-          .filter(item => item.ref === ref && item.relation === relation)
-          .map(item => [...refLink(item.from, resolver), ...text(item.note ? ` (${item.note})` : '')]),
-      )
-    pages.push({
-      key: 'coverage',
-      title: `${config.system}: Upstream decisions`,
-      labels: [],
-      body: doc([
-        table(
-          [text('Upstream decision'), text('Realized by'), text('Constrained'), text('Deviations')],
-          refs.map(ref => [
-            refLink(ref, resolver),
-            by(ref, 'realizes'),
-            by(ref, 'constrained-by'),
-            by(ref, 'deviates-from'),
-          ]),
-        ),
-      ]),
+const overviewFiles = new Set(['overview.md', 'index.md', 'readme.md'])
+
+function withOverviews(pages: readonly RenderedPage[], docs: string): RenderedPage[] {
+  const marked = pages.map(page =>
+    overviewFiles.has(posix.basename(page.key).toLowerCase()) ? { ...page, overview: true as const } : page,
+  )
+  const folders = new Set<string>()
+  for (const page of marked)
+    for (let key = page.parent; key && !folders.has(key); key = folderOf(key, docs)) folders.add(key)
+  const overviewOf = new Map(
+    [...folders].map(folder => [
+      folder,
+      marked.find(page => page.parent === folder && page.overview)?.key ?? folder.slice(0, -1),
+    ]),
+  )
+  const generated = [...folders]
+    .filter(folder => !marked.some(page => page.parent === folder && page.overview))
+    .sort()
+    .map(folder => {
+      const subfolders = [...folders].filter(other => folderOf(other, docs) === folder).sort()
+      const children = marked
+        .filter(page => page.parent === folder)
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map(page => link(page.title, pageHref(page.key)))
+      return {
+        key: folder.slice(0, -1),
+        title: `${humanize(posix.basename(folder))} overview`,
+        parent: folder,
+        overview: true as const,
+        labels: [],
+        body: doc([
+          bulletList(
+            [
+              ...subfolders.map(sub => link(humanize(posix.basename(sub)), pageHref(overviewOf.get(sub) ?? ''))),
+              ...children,
+            ].map(item => [paragraph(item)]),
+          ),
+        ]),
+      }
     })
-  }
-  return pages
+  return [...marked, ...generated]
 }

@@ -58,36 +58,6 @@
                   ]
                 }
               ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Verification"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Realizes"
-                    }
-                  ]
-                }
-              ]
             }
           ]
         },
@@ -102,28 +72,16 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "inlineExtension",
-                      "attrs": {
-                        "extensionType": "com.atlassian.confluence.macro.core",
-                        "extensionKey": "anchor",
-                        "parameters": {
-                          "macroParams": {
-                            "": {
-                              "value": "NFR-SEC-004"
-                            }
-                          },
-                          "macroMetadata": {
-                            "schemaVersion": {
-                              "value": "1"
-                            },
-                            "title": "Anchor"
+                      "type": "text",
+                      "text": "NFR-SEC-004",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "docs-sync:page/docs%2Frequirements.yaml#NFR-SEC-004"
                           }
                         }
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "text": "NFR-SEC-004"
+                      ]
                     }
                   ]
                 }
@@ -152,8 +110,192 @@
                   "type": "paragraph",
                   "content": [
                     {
+                      "type": "status",
+                      "attrs": {
+                        "text": "must",
+                        "color": "red"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
                       "type": "text",
-                      "text": "must"
+                      "text": "FR-001",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "docs-sync:page/docs%2Frequirements.yaml#FR-001"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "The service shall record every payment in the ledger."
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "status",
+                      "attrs": {
+                        "text": "must",
+                        "color": "red"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "com.atlassian.confluence.macro.core",
+            "extensionKey": "anchor",
+            "parameters": {
+              "macroParams": {
+                "": {
+                  "value": "NFR-SEC-004"
+                }
+              },
+              "macroMetadata": {
+                "schemaVersion": {
+                  "value": "1"
+                },
+                "title": "Anchor"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "NFR-SEC-004"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "If a secret is detected in a plan, then the pipeline shall stop before apply."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Priority"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "status",
+                      "attrs": {
+                        "text": "must",
+                        "color": "red"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Verification"
                     }
                   ]
                 }
@@ -171,12 +313,35 @@
                       "text": "policy/no-secrets.rego",
                       "marks": [
                         {
+                          "type": "code"
+                        },
+                        {
                           "type": "link",
                           "attrs": {
                             "href": "https://github.com/acme/payments/blob/main/policy/no-secrets.rego"
                           }
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Realizes"
                     }
                   ]
                 }
@@ -206,47 +371,100 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "com.atlassian.confluence.macro.core",
+            "extensionKey": "anchor",
+            "parameters": {
+              "macroParams": {
+                "": {
+                  "value": "FR-001"
+                }
+              },
+              "macroMetadata": {
+                "schemaVersion": {
+                  "value": "1"
+                },
+                "title": "Anchor"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "FR-001"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "The service shall record every payment in the ledger."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Priority"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "status",
+                      "attrs": {
+                        "text": "must",
+                        "color": "red"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
           "type": "tableRow",
           "content": [
             {
-              "type": "tableCell",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "inlineExtension",
-                      "attrs": {
-                        "extensionType": "com.atlassian.confluence.macro.core",
-                        "extensionKey": "anchor",
-                        "parameters": {
-                          "macroParams": {
-                            "": {
-                              "value": "FR-001"
-                            }
-                          },
-                          "macroMetadata": {
-                            "schemaVersion": {
-                              "value": "1"
-                            },
-                            "title": "Anchor"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "text": "FR-001"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableCell",
+              "type": "tableHeader",
               "attrs": {},
               "content": [
                 {
@@ -254,22 +472,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "The service shall record every payment in the ledger."
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableCell",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "must"
+                      "text": "Verification"
                     }
                   ]
                 }
@@ -295,16 +498,6 @@
                       ]
                     }
                   ]
-                }
-              ]
-            },
-            {
-              "type": "tableCell",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": []
                 }
               ]
             }
