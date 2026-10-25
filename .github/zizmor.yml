@@ -5,6 +5,7 @@ rules:
       - docs-sync-approve.yml
   self-repository:
     ignore:
+      - ci.yml
       - docs-sync.yml
   unpinned-uses:
     config:
