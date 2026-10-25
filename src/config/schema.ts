@@ -58,6 +58,10 @@ export const configSchema = z.strictObject({
   'self-approval': z.boolean().default(true),
   branch: z.string().trim().min(1).default('main'),
   'diagram-output': z.enum(['image', 'macro']).default('image'),
+  'drawio-macro-key': z
+    .string()
+    .regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/static\/drawio$/, 'Must be <app id>/<environment id>/static/drawio')
+    .default('1afdce52-d22e-4d27-84db-5be989c3c83b/92d899e8-452f-4c9b-9f60-823ab11c8253/static/drawio'),
   theme: z.union([z.enum(themeNames), repoPath]).default('nord'),
   'diagram-max-mb': z.number().int().positive().max(1000).default(50),
   docs: repoPath.default('docs'),

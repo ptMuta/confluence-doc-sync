@@ -142,7 +142,7 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
 
   let bundle: Bundle
   try {
-    bundle = await readBundle(options.bundlePath, options.expectedSha256)
+    bundle = await readBundle(options.bundlePath, options.expectedSha256, config['drawio-macro-key'])
   } catch (cause) {
     return fail('publish/bundle', message(cause))
   }

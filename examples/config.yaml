@@ -1,0 +1,15 @@
+system: Payments
+confluence:
+  site: example.atlassian.net
+  space: DOCS
+  root-page: 123456
+approval: on-risk
+approvers: [your-github-login]
+tags:
+  vocabulary: shared/tags.yaml
+reference-sources:
+  ea:
+    type: confluence
+    space: ARCH
+    folder: Architecture/Decisions
+    id-pattern: 'ADR-\d{3,4}'

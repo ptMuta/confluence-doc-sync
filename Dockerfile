@@ -1,11 +1,11 @@
-FROM node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea AS build
+FROM node:26.11.1-trixie-slim@sha256:193fe51b64e77981119c98c2002c9e32a70e2f006fb4d25068ce0558998917f0 AS build
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY src ./src
 RUN npm run build
 
-FROM node:24.22.1-trixie-slim@sha256:43b9ba1142b8dcf33fa8f922ca1be85714adc444e0586c7cf7726daaeabc1bea
+FROM node:26.11.1-trixie-slim@sha256:193fe51b64e77981119c98c2002c9e32a70e2f006fb4d25068ce0558998917f0
 ARG DRAWIO_VERSION=32.3.0
 ARG DRAWIO_SHA256=ef60ee194d8b45990dfaef2541cce8792c81d4df4cd17c7ccdcc3c3f8b3a1754
 ARG DEBIAN_SNAPSHOT=20261022T120000Z
@@ -24,4 +24,5 @@ RUN sed -i -e "s#http://deb.debian.org/debian-security#http://snapshot.debian.or
  && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* \
  && useradd --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin render
 COPY --from=build /src/dist/main.mjs /app/main.mjs
+LABEL org.opencontainers.image.source="https://github.com/ptMuta/git-confluence-sync"
 ENTRYPOINT ["node", "/app/main.mjs"]

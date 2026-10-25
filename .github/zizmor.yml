@@ -1,0 +1,5 @@
+rules:
+  stale-action-refs:
+    ignore:
+      - docs-sync.yml
+      - docs-sync-approve.yml

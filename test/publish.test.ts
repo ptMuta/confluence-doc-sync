@@ -171,6 +171,28 @@ describe('publish', () => {
     expect((await planned()).ops).toEqual([])
   })
 
+  it('publishes diagrams as draw.io macros', async () => {
+    await appendFile(join(root, '.docs-sync/config.yaml'), 'diagram-output: macro\n')
+    await sync()
+    const overview = owned('docs/overview.md')
+    expect(overview.attachments?.map(file => file.title).sort()).toEqual(['network.drawio', 'network.drawio.png'])
+    const body = JSON.stringify(overview.body)
+    expect(body).toContain('/static/drawio')
+    expect(body).toContain(`\\"pageId\\":\\"${overview.id}\\"`)
+    expect(body).toContain('\\"diagramName\\":\\"network.drawio\\"')
+    expect((await planned()).ops).toEqual([])
+
+    await source('docs/overview.md', text => text.replace('two regions', 'three regions'))
+    await planned()
+    await tamper(draft => {
+      const page = draft.pages.find(item => item.key === 'docs/overview.md')
+      const macro = page?.body.content.find(node => (node as { type?: string }).type === 'extension') as
+        { attrs: Record<string, unknown> } | undefined
+      if (macro) macro.attrs['extensionKey'] = 'other'
+    })
+    expect(errors((await run()).findings)[0]).toContain('only draw.io macros for bundled diagrams are allowed')
+  })
+
   it('treats deviates-from changes as risky whatever the plan says', async () => {
     await sync()
     await source('docs/decisions/DEC-0002-private-endpoints.md', text => text.replace('now available', 'available'))
@@ -212,10 +234,11 @@ describe('publish', () => {
   it.each<[string, (draft: Draft) => void, string]>([
     ['a newer format', draft => (draft['version'] = 2), 'plan.json is malformed'],
     [
-      'a macro',
+      'a foreign macro',
       draft => draft.pages[0]?.body.content.push({ type: 'extension', attrs: {} }),
-      'node type extension is not allowed',
+      'only draw.io macros for bundled diagrams are allowed',
     ],
+    ['an unknown node', draft => draft.pages[0]?.body.content.push({ type: 'bodiedExtension' }), 'not allowed'],
     [
       'another inline macro',
       draft =>

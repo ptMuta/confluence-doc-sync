@@ -21,14 +21,21 @@ export interface ApplyInput {
 
 const pagePrefix = 'docs-sync:page/'
 
+function macroAttrs(attrs: Readonly<Record<string, unknown>>, pageId: string) {
+  const parameters = attrs['parameters'] as { guestParams: Record<string, unknown> }
+  return { ...attrs, parameters: { ...parameters, guestParams: { ...parameters.guestParams, pageId } } }
+}
+
 function resolveBody(
   node: Node,
+  pageId: string,
   link: (href: string) => string,
   file: (id: string) => Readonly<Record<string, string>>,
 ): Node {
   return {
     ...node,
     ...(node.type === 'media' && node.attrs ? { attrs: { ...node.attrs, ...file(String(node.attrs['id'])) } } : {}),
+    ...(node.type === 'extension' && node.attrs ? { attrs: macroAttrs(node.attrs, pageId) } : {}),
     ...(node.marks
       ? {
           marks: node.marks.map(mark =>
@@ -38,7 +45,7 @@ function resolveBody(
           ),
         }
       : {}),
-    ...(node.content ? { content: node.content.map(child => resolveBody(child, link, file)) } : {}),
+    ...(node.content ? { content: node.content.map(child => resolveBody(child, pageId, link, file)) } : {}),
   }
 }
 
@@ -90,7 +97,7 @@ export async function apply(input: ApplyInput): Promise<void> {
       uploaded = true
     }
     const files = new Map((uploaded ? await reader.attachments(id) : existing).map(file => [file.title, file.fileId]))
-    const body = resolveBody(page.body, link, (media: string) => {
+    const body = resolveBody(page.body, id, link, (media: string) => {
       const name = media.replace(/^docs-sync:attachment\//, '')
       const fileId = files.get(name)
       if (!fileId) throw new Error(`Image ${name} did not upload to page ${id}`)
