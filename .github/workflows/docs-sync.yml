@@ -67,7 +67,7 @@ jobs:
     if: needs.plan.outputs.has-changes == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment: docs-sync-publish-low-risk
+    environment: docs-sync-publish
     permissions:
       contents: read
       actions: read # download the plan artifact

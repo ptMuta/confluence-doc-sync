@@ -23,7 +23,7 @@ The same workflow runs every night at 03:17 UTC. If main has changes beyond docs
 
 ## Dogfooding
 
-This repository syncs its own docs to the Documentation folder in GCS. Pull requests check the docs with the action built from source. Pushes to main plan and publish with the latest nightly release, so the docs go out through the published action and image. It sets approval: none, so every change publishes through docs-sync-publish-low-risk without waiting.
+This repository syncs its own docs to the Documentation folder in GCS. Pull requests check the docs with the action built from source. Pushes to main plan and publish with the latest nightly release, so the docs go out through the published action and image. It sets approval: none, so every change publishes through the docs-sync-publish environment, with tier low-risk, without waiting.
 
 ## Dependency updates
 

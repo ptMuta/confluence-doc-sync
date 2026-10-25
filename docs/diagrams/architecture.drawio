@@ -28,7 +28,7 @@
         <mxCell id="bundle" value="Plan bundle and hash" style="role=queue;icon=package;" vertex="1" parent="planzone">
           <mxGeometry x="240" y="42" width="150" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="pubzone" value="docs-sync-publish-low-risk: write token and ownership key" style="role=boundary;" vertex="1" parent="github">
+        <mxCell id="pubzone" value="docs-sync-publish: write token and ownership key" style="role=boundary;" vertex="1" parent="github">
           <mxGeometry x="200" y="355" width="410" height="125" as="geometry" />
         </mxCell>
         <mxCell id="checks" value="Checks hash, commit, config, visibility and signed ownership" style="role=note;" vertex="1" parent="pubzone">
