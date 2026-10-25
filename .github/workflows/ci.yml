@@ -65,8 +65,31 @@ jobs:
       - name: semgrep
         run: docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.181.1@sha256:3db5c7af55eb1f512eac0abf0ab69a97b52c74b5e9a27314c221aee1a78d7ab2 semgrep scan --config p/typescript --config p/nodejsscan --config p/github-actions --config p/dockerfile --exclude-rule dockerfile.security.missing-user-entrypoint.missing-user-entrypoint --error --metrics=off
 
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if git diff --name-only "$BASE" HEAD | grep -qvE '^(docs/|\.docs-sync/|docs-sync\.lock$|[^/]+\.md$)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          fi
+
   image:
     name: Container image
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
