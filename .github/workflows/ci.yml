@@ -105,7 +105,7 @@ jobs:
       - name: Smoke test
         run: |
           sample() { docker run --rm -v "$PWD/test/fixtures/$1:/github/workspace:ro" -w /github/workspace "${@:2}" docs-sync:ci; }
-          quiet() { "$@" | sed 's/^::/  /'; }
+          quiet() { "$@" | sed 's/^::/  /'; return "${PIPESTATUS[0]}"; }
           sample good -e INPUT_MODE=check
           if quiet sample bad -e INPUT_MODE=check; then
             echo "check mode passed the bad sample repo"
