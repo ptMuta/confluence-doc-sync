@@ -77,4 +77,6 @@ Node 26. `npm ci --ignore-scripts`, then `npm run verify` runs type checks, lint
 
 To release, run the `release` workflow on `main` with a version such as `v1.0.0`, or `v1.0.0-rc.1` for a pre-release. It needs a `release` environment limited to `main`, and immutable releases turned on in the repo settings.
 
+The same workflow publishes a `nightly-YYYYMMDD` pre-release every night when `main` has changed, through a `nightly` environment without reviewers. After each release it keeps the last 7 nightlies, deletes release candidates once their final version is out, and deletes their images. Final releases are never deleted.
+
 Copyright © 2026 ptMuta. All rights reserved. Proprietary; no license is granted.
