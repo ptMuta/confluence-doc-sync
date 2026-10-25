@@ -1,23 +1,24 @@
 version: 2
+multi-ecosystem-groups:
+  weekly:
+    schedule:
+      interval: weekly
 updates:
   - package-ecosystem: npm
     directory: /
-    schedule:
-      interval: weekly
+    patterns: ['*']
+    multi-ecosystem-group: weekly
     cooldown:
       default-days: 7
-    groups:
-      dev:
-        dependency-type: development
   - package-ecosystem: github-actions
     directory: /
-    schedule:
-      interval: weekly
+    patterns: ['*']
+    multi-ecosystem-group: weekly
     cooldown:
       default-days: 7
   - package-ecosystem: docker
     directory: /
-    schedule:
-      interval: weekly
+    patterns: ['*']
+    multi-ecosystem-group: weekly
     cooldown:
       default-days: 7

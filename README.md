@@ -73,7 +73,7 @@ gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -
 
 ## Development
 
-Node 24. `npm ci --ignore-scripts`, then `npm run verify` runs type checks, lint, formatting, tests with coverage, Knip and the build.
+Node 26. `npm ci --ignore-scripts`, then `npm run verify` runs type checks, lint, formatting, tests with coverage, Knip and the build.
 
 To release, run the `release` workflow on `main` with a version such as `v1.0.0`. It needs a `release` environment limited to `main`, and immutable releases turned on in the repo settings.
 

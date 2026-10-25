@@ -61,7 +61,9 @@ export function cloudWriter(http: WriteHttp, pause = wait): Writer {
       const form = new FormData()
       form.append(
         'file',
-        new Blob([data], { type: name.endsWith('.drawio') ? 'application/vnd.jgraph.mxfile' : 'image/png' }),
+        new Blob([new Uint8Array(data)], {
+          type: name.endsWith('.drawio') ? 'application/vnd.jgraph.mxfile' : 'image/png',
+        }),
         name,
       )
       form.append('comment', comment)
