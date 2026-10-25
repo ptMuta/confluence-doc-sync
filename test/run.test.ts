@@ -97,7 +97,7 @@ describe('run', () => {
       mode: 'publish',
       'confluence-token': 'token',
       'expected-bundle-sha256': 'abc',
-      'environment-tier': 'reviewed',
+      'environment-tier': 'high-risk',
       'ownership-key': 'key',
       'change-author': 'someone',
     })
@@ -105,7 +105,7 @@ describe('run', () => {
     await run()
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(publisher.publish).toHaveBeenCalledWith(
-      expect.objectContaining({ bundlePath: 'docs-sync-plan', tier: 'reviewed', author: 'someone' }),
+      expect.objectContaining({ bundlePath: 'docs-sync-plan', tier: 'high-risk', author: 'someone' }),
     )
     expect(core.info).toHaveBeenCalledWith('Published: 2 created, 1 updated, 0 moved, 0 archived')
     expect(await readFile(summary, 'utf8')).toContain('Archived')

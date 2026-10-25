@@ -14,7 +14,7 @@ import { apply } from './apply.ts'
 import { readBundle, type Bundle } from './bundle.ts'
 import { validSignature } from './marker.ts'
 
-const tiers = ['unreviewed', 'reviewed', 'approver'] as const
+const tiers = ['low-risk', 'high-risk', 'manual'] as const
 type Tier = (typeof tiers)[number]
 
 export interface PublishOptions {
@@ -46,8 +46,8 @@ function gate(
   actor: string | undefined,
   author: string | undefined,
 ): string | undefined {
-  if (tier === 'reviewed') return undefined
-  if (tier === 'approver') {
+  if (tier === 'high-risk') return undefined
+  if (tier === 'manual') {
     const login = actor?.toLowerCase()
     if (!login || !config.approvers.some(name => name.toLowerCase() === login))
       return `${actor ?? 'The user who started this run'} is not in approvers`
@@ -56,9 +56,9 @@ function gate(
     return author.toLowerCase() === login ? `${actor ?? ''} cannot approve their own change` : undefined
   }
   if (!ops.length || config.approval === 'none') return undefined
-  if (config.approval === 'always') return 'approval: always needs the reviewed or approver tier'
+  if (config.approval === 'always') return 'approval: always needs the high-risk or manual tier'
   const risky = [...new Set(ops.flatMap(item => (item.risky ? [item.risky] : [])))]
-  return risky.length ? `Risky changes need the reviewed or approver tier: ${risky.join(', ')}` : undefined
+  return risky.length ? `Risky changes need the high-risk or manual tier: ${risky.join(', ')}` : undefined
 }
 
 function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Owned[], key: string, root: string) {

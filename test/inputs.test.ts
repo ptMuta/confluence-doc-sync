@@ -13,7 +13,7 @@ describe('parseInputs', () => {
         'confluence-token': 't',
         'bundle-path': 'b',
         'expected-bundle-sha256': 'h',
-        'environment-tier': 'reviewed',
+        'environment-tier': 'high-risk',
         'ownership-key': 'k',
       },
     ],

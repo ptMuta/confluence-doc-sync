@@ -224,12 +224,12 @@ try {
   expect('first plan creates every page', [...new Set(first.plan.ops.map(({ op }) => op.kind))], ['create'])
   cpSync(join(repo, 'bundle/docs-sync.lock'), join(repo, '.docs-sync/docs-sync.lock'))
 
-  refused('unreviewed tier refuses new pages', publish('Publish, unreviewed', first.sha, 'unreviewed'), 'Risky changes')
-  refused('approver tier needs an approver', publish('Publish, approver', first.sha, 'approver'), 'not in approvers')
-  refused('wrong hash is refused', publish('Publish, wrong hash', '0'.repeat(64), 'reviewed'), 'does not match')
+  refused('unreviewed tier refuses new pages', publish('Publish, unreviewed', first.sha, 'low-risk'), 'Risky changes')
+  refused('approver tier needs an approver', publish('Publish, approver', first.sha, 'manual'), 'not in approvers')
+  refused('wrong hash is refused', publish('Publish, wrong hash', '0'.repeat(64), 'high-risk'), 'does not match')
   expect('refusals wrote nothing', (await tree()).length, 0)
 
-  expect('full sync', publish('Publish, reviewed', first.sha, 'reviewed').ok, true)
+  expect('full sync', publish('Publish, reviewed', first.sha, 'high-risk').ok, true)
   const pages = await owned()
   expect(
     'every page is created and signed',
@@ -253,7 +253,7 @@ try {
   const quiet = plan('Plan after publish')
   expect('nothing to do after publish', quiet.plan.ops, [])
   const snapshot = await versions()
-  expect('empty publish', publish('Publish, nothing to do', quiet.sha, 'unreviewed').ok, true)
+  expect('empty publish', publish('Publish, nothing to do', quiet.sha, 'low-risk').ok, true)
   expect('empty publish wrote nothing', await versions(), snapshot)
 
   const overviewFile = join(repo, 'docs/overview.md')
@@ -261,7 +261,7 @@ try {
   const content = plan('Plan after a source change')
   expect('content change is a low-risk update', kinds(content.plan), ['update(content) docs/overview.md'])
   const attachmentVersion = attachments[0]?.version?.number
-  expect('content change publishes unreviewed', publish('Publish content change', content.sha, 'unreviewed').ok, true)
+  expect('content change publishes unreviewed', publish('Publish content change', content.sha, 'low-risk').ok, true)
   const after = (await call(R, 'GET', `/api/v2/pages/${overview.id}/attachments`)).results
   expect('unchanged diagram is not uploaded again', after[0]?.version?.number, attachmentVersion)
 
@@ -271,14 +271,14 @@ try {
   await setMarker(overview.id, { ...marker, signature: undefined })
   refused(
     'unsigned page is refused',
-    publish('Publish to an unsigned page', unsigned.sha, 'reviewed'),
+    publish('Publish to an unsigned page', unsigned.sha, 'high-risk'),
     'no valid ownership signature',
   )
   await setMarker(overview.id, marker)
   await edit(overview.id, {})
   refused(
     'edit after plan is refused',
-    publish('Publish after a manual edit', unsigned.sha, 'reviewed'),
+    publish('Publish after a manual edit', unsigned.sha, 'high-risk'),
     'edited in Confluence after the plan',
   )
 
@@ -307,12 +307,12 @@ try {
   ])
   refused(
     'unreviewed tier refuses risky changes',
-    publish('Publish risky, unreviewed', risky.sha, 'unreviewed'),
+    publish('Publish risky, unreviewed', risky.sha, 'low-risk'),
     'Risky changes',
   )
   expect(
     'approver publishes risky changes',
-    publish('Publish risky, approver', risky.sha, 'approver', { GITHUB_ACTOR: 'docs-approver' }).ok,
+    publish('Publish risky, approver', risky.sha, 'manual', { GITHUB_ACTOR: 'docs-approver' }).ok,
     true,
   )
   expect('logging moved back', (await page(logging.id)).parentId, root)
@@ -321,7 +321,7 @@ try {
   appendFileSync(join(repo, '.docs-sync/config.yaml'), 'diagram-output: macro\n')
   const macro = plan('Plan with draw.io macros')
   expect('macro output updates the overview', kinds(macro.plan), ['update(content) docs/overview.md'])
-  expect('macro publish', publish('Publish macros', macro.sha, 'unreviewed').ok, true)
+  expect('macro publish', publish('Publish macros', macro.sha, 'low-risk').ok, true)
   const macroBody = (await page(overview.id)).body.atlas_doc_format.value
   const macroFiles = (await call(R, 'GET', `/api/v2/pages/${overview.id}/attachments`)).results.map(a => a.title).sort()
   expect('macro attachments', macroFiles, ['network.drawio', 'network.drawio.png', 'network.png'])

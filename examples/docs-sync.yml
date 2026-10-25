@@ -32,7 +32,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment: docs-plan
+    environment: docs-sync-read
     permissions:
       contents: read
     outputs:
@@ -60,7 +60,7 @@ jobs:
     if: needs.plan.outputs.has-changes == 'true' && (needs.plan.outputs.risk == 'low' || vars.DOCS_SYNC_REVIEWERS == 'true')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment: ${{ needs.plan.outputs.risk == 'low' && 'docs-publish' || 'docs-publish-reviewed' }}
+    environment: ${{ needs.plan.outputs.risk == 'low' && 'docs-sync-publish-low-risk' || 'docs-sync-publish-high-risk' }}
     permissions:
       contents: read
       actions: read # download the plan artifact
