@@ -38,7 +38,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Title"
+                      "text": "Decision"
                     }
                   ]
                 }
@@ -68,7 +68,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "State"
+                      "text": "Status"
                     }
                   ]
                 }
@@ -88,12 +88,27 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "DEC-0001",
+                      "text": "DEC-0001"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Use public endpoints with IP allow lists",
                       "marks": [
                         {
                           "type": "link",
                           "attrs": {
-                            "href": "https://example.atlassian.net/wiki/x/DEC-0001"
+                            "href": "docs-sync:page/docs%2Fdecisions%2FDEC-0001-public-endpoints.md"
                           }
                         }
                       ]
@@ -110,8 +125,10 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "text",
-                      "text": "Use public endpoints with IP allow lists"
+                      "type": "date",
+                      "attrs": {
+                        "timestamp": "1768003200000"
+                      }
                     }
                   ]
                 }
@@ -125,35 +142,11 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "text",
-                      "text": "2026-01-10"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableCell",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Superseded by "
-                    },
-                    {
-                      "type": "text",
-                      "text": "DEC-0002",
-                      "marks": [
-                        {
-                          "type": "link",
-                          "attrs": {
-                            "href": "https://example.atlassian.net/wiki/x/DEC-0002"
-                          }
-                        }
-                      ]
+                      "type": "status",
+                      "attrs": {
+                        "text": "Superseded",
+                        "color": "neutral"
+                      }
                     }
                   ]
                 }
@@ -173,12 +166,27 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "DEC-0002",
+                      "text": "DEC-0002"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Use private endpoints for all data stores",
                       "marks": [
                         {
                           "type": "link",
                           "attrs": {
-                            "href": "https://example.atlassian.net/wiki/x/DEC-0002"
+                            "href": "docs-sync:page/docs%2Fdecisions%2FDEC-0002-private-endpoints.md"
                           }
                         }
                       ]
@@ -195,8 +203,10 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "text",
-                      "text": "Use private endpoints for all data stores"
+                      "type": "date",
+                      "attrs": {
+                        "timestamp": "1792627200000"
+                      }
                     }
                   ]
                 }
@@ -210,23 +220,11 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "text",
-                      "text": "2026-10-22"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableCell",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Active"
+                      "type": "status",
+                      "attrs": {
+                        "text": "Active",
+                        "color": "green"
+                      }
                     }
                   ]
                 }
@@ -387,7 +385,7 @@
                     },
                     {
                       "type": "text",
-                      "text": " (Region pair not available for this service (approved by architecture-board))"
+                      "text": ": Region pair not available for this service"
                     }
                   ]
                 }

@@ -96,6 +96,10 @@ const blocks = new Set([
   'hardBreak',
   'inlineExtension',
   'extension',
+  'layoutSection',
+  'layoutColumn',
+  'status',
+  'date',
 ])
 const marks = new Set(['strong', 'em', 'strike', 'code', 'link'])
 const nodeKeys = new Set(['type', 'attrs', 'content', 'marks', 'text'])

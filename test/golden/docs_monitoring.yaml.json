@@ -53,52 +53,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Signal"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
                       "text": "Severity"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Route"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Covers"
                     }
                   ]
                 }
@@ -117,28 +72,16 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "inlineExtension",
-                      "attrs": {
-                        "extensionType": "com.atlassian.confluence.macro.core",
-                        "extensionKey": "anchor",
-                        "parameters": {
-                          "macroParams": {
-                            "": {
-                              "value": "MON-001"
-                            }
-                          },
-                          "macroMetadata": {
-                            "schemaVersion": {
-                              "value": "1"
-                            },
-                            "title": "Anchor"
+                      "type": "text",
+                      "text": "MON-001",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "docs-sync:page/docs%2Fmonitoring.yaml#MON-001"
                           }
                         }
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "text": "MON-001"
+                      ]
                     }
                   ]
                 }
@@ -168,6 +111,103 @@
                   "content": [
                     {
                       "type": "text",
+                      "text": "high"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "com.atlassian.confluence.macro.core",
+            "extensionKey": "anchor",
+            "parameters": {
+              "macroParams": {
+                "": {
+                  "value": "MON-001"
+                }
+              },
+              "macroMetadata": {
+                "schemaVersion": {
+                  "value": "1"
+                },
+                "title": "Anchor"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "MON-001"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "Payments fail to reach the ledger."
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Signal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
                       "text": "https://example.com/alerts/ledger-errors",
                       "marks": [
                         {
@@ -177,6 +217,26 @@
                           }
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Severity"
                     }
                   ]
                 }
@@ -196,6 +256,26 @@
                   ]
                 }
               ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Route"
+                    }
+                  ]
+                }
+              ]
             },
             {
               "type": "tableCell",
@@ -207,6 +287,26 @@
                     {
                       "type": "text",
                       "text": "payments-oncall"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Covers"
                     }
                   ]
                 }

@@ -53,37 +53,7 @@
                   "content": [
                     {
                       "type": "text",
-                      "text": "Fields"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
                       "text": "Destination"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "tableHeader",
-              "attrs": {},
-              "content": [
-                {
-                  "type": "paragraph",
-                  "content": [
-                    {
-                      "type": "text",
-                      "text": "Retention"
                     }
                   ]
                 }
@@ -102,28 +72,16 @@
                   "type": "paragraph",
                   "content": [
                     {
-                      "type": "inlineExtension",
-                      "attrs": {
-                        "extensionType": "com.atlassian.confluence.macro.core",
-                        "extensionKey": "anchor",
-                        "parameters": {
-                          "macroParams": {
-                            "": {
-                              "value": "LOG-001"
-                            }
-                          },
-                          "macroMetadata": {
-                            "schemaVersion": {
-                              "value": "1"
-                            },
-                            "title": "Anchor"
+                      "type": "text",
+                      "text": "LOG-001",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "docs-sync:page/docs%2Flogging.yaml#LOG-001"
                           }
                         }
-                      }
-                    },
-                    {
-                      "type": "text",
-                      "text": "LOG-001"
+                      ]
                     }
                   ]
                 }
@@ -153,7 +111,124 @@
                   "content": [
                     {
                       "type": "text",
+                      "text": "Central log workspace"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 2
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Details"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "attrs": {
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "inlineExtension",
+          "attrs": {
+            "extensionType": "com.atlassian.confluence.macro.core",
+            "extensionKey": "anchor",
+            "parameters": {
+              "macroParams": {
+                "": {
+                  "value": "LOG-001"
+                }
+              },
+              "macroMetadata": {
+                "schemaVersion": {
+                  "value": "1"
+                },
+                "title": "Anchor"
+              }
+            }
+          }
+        },
+        {
+          "type": "text",
+          "text": "LOG-001"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        {
+          "type": "text",
+          "text": "payment.created"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "attrs": {
+        "isNumberColumnEnabled": false,
+        "layout": "default"
+      },
+      "content": [
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Fields"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "tableCell",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
                       "text": "payment_id, amount"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Destination"
                     }
                   ]
                 }
@@ -169,6 +244,26 @@
                     {
                       "type": "text",
                       "text": "Central log workspace"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "tableRow",
+          "content": [
+            {
+              "type": "tableHeader",
+              "attrs": {},
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Retention"
                     }
                   ]
                 }
