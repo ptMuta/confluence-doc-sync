@@ -16,7 +16,7 @@ const eaSpace = env('CONFLUENCE_EA_SPACE')
 const eaFolder = env('CONFLUENCE_EA_FOLDER')
 const R = env('CONFLUENCE_SPIKE_READ_TOKEN')
 const W = env('CONFLUENCE_SPIKE_WRITE_TOKEN')
-const image = process.env.DOCS_SYNC_IMAGE ?? 'docs-sync:spike'
+const image = process.env.DOCS_SYNC_IMAGE ?? 'docs-sync:live'
 const run = process.env.GITHUB_RUN_ID ?? String(Date.now())
 const key = randomBytes(32).toString('hex')
 const main = resolve('dist/main.mjs')
@@ -153,7 +153,7 @@ function plan(label) {
       '-e',
       'INPUT_BUNDLE-PATH=bundle',
       '-e',
-      'GITHUB_SHA=spike',
+      'GITHUB_SHA=live',
       image,
     ],
     { encoding: 'utf8', env: { PATH: process.env.PATH, 'INPUT_CONFLUENCE-TOKEN': R } },
@@ -179,7 +179,7 @@ function publish(label, sha, tier, extra = {}) {
       'INPUT_EXPECTED-BUNDLE-SHA256': sha,
       'INPUT_ENVIRONMENT-TIER': tier,
       'INPUT_OWNERSHIP-KEY': key,
-      GITHUB_SHA: 'spike',
+      GITHUB_SHA: 'live',
       GITHUB_REF: 'refs/heads/main',
       GITHUB_ACTOR: 'docs-bot',
       ...extra,

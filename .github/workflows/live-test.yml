@@ -1,24 +1,18 @@
-name: spike-confluence
+name: live-test
 
 on:
   workflow_dispatch:
-    inputs:
-      script:
-        description: Script to run
-        type: choice
-        options: [confluence, adf-check, plan-check, publish-check]
-        default: confluence
 
 permissions:
   contents: read
 
 concurrency:
-  group: spike-confluence
+  group: live-test
   cancel-in-progress: false
 
 jobs:
-  spike:
-    name: Confluence spike
+  confluence:
+    name: Confluence test site
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -30,19 +24,12 @@ jobs:
           node-version-file: .node-version
       - run: npm ci --ignore-scripts
       - run: npm run build
-      - name: Build image
-        if: inputs.script == 'publish-check'
-        run: docker build -t docs-sync:spike .
-      - name: Run spike
-        env:
-          SCRIPT: ${{ inputs.script }}
+      - run: docker build -t docs-sync:live .
+      - env:
           CONFLUENCE_SITE: ${{ vars.CONFLUENCE_SITE }}
-          CONFLUENCE_SPIKE_EMAIL: ${{ vars.CONFLUENCE_SPIKE_EMAIL }}
           CONFLUENCE_TEST_SPACE: ${{ vars.CONFLUENCE_TEST_SPACE }}
           CONFLUENCE_EA_SPACE: ${{ vars.CONFLUENCE_EA_SPACE }}
           CONFLUENCE_EA_FOLDER: ${{ vars.CONFLUENCE_EA_FOLDER }}
           CONFLUENCE_SPIKE_READ_TOKEN: ${{ secrets.CONFLUENCE_SPIKE_READ_TOKEN }}
           CONFLUENCE_SPIKE_WRITE_TOKEN: ${{ secrets.CONFLUENCE_SPIKE_WRITE_TOKEN }}
-        run: |
-          node --version
-          node "spikes/$SCRIPT.mjs"
+        run: node test/live/confluence.mjs

@@ -84,6 +84,10 @@ jobs:
           docker push "$IMAGE:$VERSION"
           digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$VERSION")
           echo "digest=${digest#*@}" >> "$GITHUB_OUTPUT"
+          if [[ "$VERSION" == nightly-* ]]; then
+            docker tag docs-sync:release "$IMAGE:nightly"
+            docker push "$IMAGE:nightly"
+          fi
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-name: ${{ env.IMAGE }}
@@ -106,14 +110,14 @@ jobs:
 
   cleanup:
     name: Clean up pre-releases
-    needs: release
+    needs: [version, release]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write # delete old pre-releases and their tags
       packages: write # delete their images
     env:
-      KEEP_NIGHTLIES: 7
+      VERSION: ${{ needs.version.outputs.version }}
       GH_TOKEN: ${{ github.token }}
       PACKAGE: users/${{ github.repository_owner }}/packages/container/git-confluence-sync/versions
     steps:
@@ -121,7 +125,7 @@ jobs:
           tags=$(gh release list -R "$GITHUB_REPOSITORY" -L 1000 --json tagName -q '.[].tagName')
           finals=$(grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' <<< "$tags" || true)
           old=$(
-            grep '^nightly-' <<< "$tags" | sort -r | tail -n "+$((KEEP_NIGHTLIES + 1))"
+            grep '^nightly-' <<< "$tags" | grep -vx "$VERSION"
             grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' <<< "$tags" | while read -r tag; do
               if grep -qx "${tag%-rc.*}" <<< "$finals"; then echo "$tag"; fi
             done
