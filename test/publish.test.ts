@@ -171,6 +171,22 @@ describe('publish', () => {
     expect((await planned()).ops).toEqual([])
   })
 
+  it('publishes into a root folder', async () => {
+    confluence.add({ id: '800', type: 'folder', title: 'Documentation', parentId: '1', parentType: 'page' })
+    await source('.docs-sync/config.yaml', text => text.replace('root-page: 123456', 'root-folder: 800'))
+    await sync()
+    expect(owned('docs/requirements.yaml').parentId).toBe('800')
+    expect((await planned()).ops).toEqual([])
+    await source('.docs-sync/config.yaml', text => text.replace('root-folder: 800', 'root-page: 123456'))
+    expect(errors((await run()).findings)).toEqual(['publish/config: The plan does not match the config: root'])
+    await source('.docs-sync/config.yaml', text =>
+      text.replace('root-page: 123456', 'root-page: 1\n  root-folder: 800'),
+    )
+    expect(errors((await run()).findings)).toEqual([
+      'schema: confluence.root-page: Set either root-page or root-folder',
+    ])
+  })
+
   it('publishes diagrams as draw.io macros', async () => {
     await appendFile(join(root, '.docs-sync/config.yaml'), 'diagram-output: macro\n')
     await sync()
@@ -381,7 +397,7 @@ describe('publish', () => {
     const home = confluence.items.get('123456')
     if (home) home.readers = ['group:g1']
     expect(errors((await run()).findings)).toEqual([
-      'publish/visibility: Who can view the root page changed since the plan; plan again',
+      'publish/visibility: Who can view the root changed since the plan; plan again',
     ])
     confluence.access = [{ principalType: 'ACCESS_CLASS', principalId: 'anonymous-users' }]
     expect(errors((await run()).findings)[0]).toMatch(/^visibility\/space/)
@@ -420,7 +436,7 @@ describe('publish', () => {
     }
     const update = (draft: Draft) => draft.ops[0]?.op ?? {}
     expect(await variant(draft => (update(draft)['page'] = '1'))).toEqual([
-      'publish/op: update docs/overview.md: page 1 does not hold this source under the root page',
+      'publish/op: update docs/overview.md: page 1 does not hold this source under the root',
     ])
     expect(await variant(draft => (update(draft)['title'] = 'Other'))).toEqual([
       'publish/op: update docs/overview.md: the title does not match the page',
@@ -440,7 +456,7 @@ describe('publish', () => {
       }),
     ).toEqual([
       `publish/op: create docs/overview.md: page ${overview.id} already holds this source`,
-      'publish/op: create docs/overview.md: the parent is not the root page or a page this tool owns',
+      'publish/op: create docs/overview.md: the parent is not the root or a page this tool owns',
     ])
     expect(
       await variant(draft =>
@@ -459,7 +475,7 @@ describe('publish', () => {
       ),
     ).toEqual([
       'publish/op: archive docs/overview.md: the plan also writes this page',
-      'publish/op: move docs/logging.yaml: the new parent is not the root page or a page this tool owns',
+      'publish/op: move docs/logging.yaml: the new parent is not the root or a page this tool owns',
     ])
     expect(confluence.writes).toEqual([])
   })

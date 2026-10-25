@@ -134,7 +134,7 @@ describe('currentState', () => {
         marker: { source: 'a.md', hash: 'h', version: 1 },
       })
       .add({ id: '4', type: 'page', title: 'C', parentId: '1', version: 1, marker: { bogus: true } })
-    const { owned, findings } = await currentState(cloudReader(fake.http), '1', 'config.yaml')
+    const { owned, findings } = await currentState(cloudReader(fake.http), { type: 'page', id: '1' }, 'config.yaml')
     expect(owned.map(page => page.id)).toEqual(['2'])
     expect(findings.map(finding => finding.message)).toEqual(['Pages 2 and 3 both claim a.md'])
   })

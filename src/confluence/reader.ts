@@ -39,7 +39,7 @@ interface Attachment {
 export interface Reader {
   readonly space: (key: string) => Promise<Space | undefined>
   readonly item: (type: Item['type'], id: string) => Promise<Item | undefined>
-  readonly descendants: (id: string) => Promise<Node[]>
+  readonly descendants: (type: Item['type'], id: string) => Promise<Node[]>
   readonly children: (folderId: string) => Promise<Node[]>
   readonly property: (pageId: string, key: string) => Promise<unknown>
   readonly labels: (pageId: string) => Promise<string[]>
@@ -98,7 +98,7 @@ export function cloudReader(http: Http): Reader {
         ...(raw.version ? { version: raw.version.number } : {}),
       }
     },
-    descendants: id => http.pages<Node>(`/api/v2/pages/${q(id)}/descendants?depth=10&limit=250`),
+    descendants: (type, id) => http.pages<Node>(`/api/v2/${type}s/${q(id)}/descendants?depth=10&limit=250`),
     children: id => http.pages<Node>(`/api/v2/folders/${q(id)}/direct-children?limit=250`),
     property: async (pageId, key) =>
       (await http.get<{ results: { value: unknown }[] }>(`/api/v2/pages/${q(pageId)}/properties?key=${q(key)}`))

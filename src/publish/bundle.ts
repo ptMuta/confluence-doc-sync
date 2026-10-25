@@ -31,7 +31,7 @@ const planSchema = z.strictObject({
   site: z.string(),
   cloudId: z.string(),
   space: z.strictObject({ key: z.string(), id: z.string() }),
-  root: id,
+  root: z.string().regex(/^(?:page|folder):\d+$/),
   approval: z.enum(['none', 'always', 'on-risk']),
   risk: z.enum(['low', 'high']),
   visibility: z.strictObject({

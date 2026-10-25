@@ -1,0 +1,6 @@
+system: Docs sync
+confluence:
+  site: ptmuta.atlassian.net
+  space: GCS
+  root-folder: 3866878
+approvers: [ptMuta]

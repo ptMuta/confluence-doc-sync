@@ -10,7 +10,7 @@ GitHub Action that checks a repository's structured docs and publishes them to C
 | `plan`    | pushes to `main`      | read  | Compares the docs with Confluence and writes a hashed plan bundle |
 | `publish` | a publish environment | write | Verifies the bundle and applies it                                |
 
-Publish treats the plan as untrusted. It checks the bundle hash, commit, branch and config, re-classifies risk, re-checks who can view the root page, and only changes pages under the root that carry a signed ownership marker.
+Publish treats the plan as untrusted. It checks the bundle hash, commit, branch and config, re-classifies risk, re-checks who can view the root, and only changes pages under the root that carry a signed ownership marker.
 
 Risky changes are new, moved or archived pages, overwriting a manual edit in Confluence, and changes to pages with `deviates-from` links.
 
@@ -36,29 +36,30 @@ Required reviewers work only in public repos or on GitHub Enterprise. Elsewhere,
 
 ## Config
 
-| Key                     | Default                 | Meaning                                                                           |
-| ----------------------- | ----------------------- | --------------------------------------------------------------------------------- |
-| `system`                | required                | System name, used as a prefix in page titles                                      |
-| `confluence.site`       | required                | `<name>.atlassian.net`                                                            |
-| `confluence.cloud-id`   | none                    | Pins the site's cloud id                                                          |
-| `confluence.space`      | required                | Space key                                                                         |
-| `confluence.root-page`  | required                | Page id that holds the synced pages                                               |
-| `confluence.visibility` | `space`                 | `space`: no anonymous access; `restricted`: the root must be restricted; `public` |
-| `confluence.readers`    | none                    | Groups that must be exactly the root's viewers (needs `restricted`)               |
-| `approval`              | `on-risk`               | `none`, `always` or `on-risk`                                                     |
-| `approvers`             | `[]`                    | GitHub logins that can run `docs-sync-approve`                                    |
-| `self-approval`         | `true`                  | Whether an approver can approve their own change                                  |
-| `branch`                | `main`                  | The only branch publish runs on                                                   |
-| `diagram-output`        | `image`                 | `image` (PNG) or `macro` (draw.io app)                                            |
-| `drawio-macro-key`      | draw.io Marketplace app | Forge extension key of the draw.io app                                            |
-| `theme`                 | `nord`                  | Built-in theme or a theme file                                                    |
-| `diagram-max-mb`        | `50`                    | Size limit per diagram                                                            |
-| `docs`                  | `docs`                  | Docs folder                                                                       |
-| `decisions`             | `Decision`, `DEC`       | `label`, `id-prefix` and `folder` of decision records                             |
-| `catalogs`              | `docs/<name>.yaml`      | Paths of the requirements, security, logging and monitoring catalogs              |
-| `tags`                  | none                    | Shared `vocabulary` file and `extra` tags                                         |
-| `reference-sources`     | none                    | External decisions in Confluence, referenced as `<source>:<id>`                   |
-| `lint`                  | built in                | Length `budgets`, `filler` phrases and `deny-patterns`                            |
+| Key                      | Default                 | Meaning                                                                           |
+| ------------------------ | ----------------------- | --------------------------------------------------------------------------------- |
+| `system`                 | required                | System name, used as a prefix in page titles                                      |
+| `confluence.site`        | required                | `<name>.atlassian.net`                                                            |
+| `confluence.cloud-id`    | none                    | Pins the site's cloud id                                                          |
+| `confluence.space`       | required                | Space key                                                                         |
+| `confluence.root-page`   | one of the two          | Page id that holds the synced pages                                               |
+| `confluence.root-folder` | one of the two          | Folder id that holds the synced pages, instead of `root-page`                     |
+| `confluence.visibility`  | `space`                 | `space`: no anonymous access; `restricted`: the root must be restricted; `public` |
+| `confluence.readers`     | none                    | Groups that must be exactly the root's viewers (needs `restricted`)               |
+| `approval`               | `on-risk`               | `none`, `always` or `on-risk`                                                     |
+| `approvers`              | `[]`                    | GitHub logins that can run `docs-sync-approve`                                    |
+| `self-approval`          | `true`                  | Whether an approver can approve their own change                                  |
+| `branch`                 | `main`                  | The only branch publish runs on                                                   |
+| `diagram-output`         | `image`                 | `image` (PNG) or `macro` (draw.io app)                                            |
+| `drawio-macro-key`       | draw.io Marketplace app | Forge extension key of the draw.io app                                            |
+| `theme`                  | `nord`                  | Built-in theme or a theme file                                                    |
+| `diagram-max-mb`         | `50`                    | Size limit per diagram                                                            |
+| `docs`                   | `docs`                  | Docs folder                                                                       |
+| `decisions`              | `Decision`, `DEC`       | `label`, `id-prefix` and `folder` of decision records                             |
+| `catalogs`               | `docs/<name>.yaml`      | Paths of the requirements, security, logging and monitoring catalogs              |
+| `tags`                   | none                    | Shared `vocabulary` file and `extra` tags                                         |
+| `reference-sources`      | none                    | External decisions in Confluence, referenced as `<source>:<id>`                   |
+| `lint`                   | built in                | Length `budgets`, `filler` phrases and `deny-patterns`                            |
 
 Plan writes `docs-sync.lock` with the resolved external decisions. Commit it next to the config so a changed resolution shows up in review.
 

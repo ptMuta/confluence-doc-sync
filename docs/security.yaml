@@ -1,0 +1,51 @@
+- id: SEC-001
+  control: Check mode runs on pull requests and fails when given a Confluence token.
+  applies-to: [src/inputs.ts]
+  enforced-by: .github/workflows/ci.yml
+  requirement: [NFR-SEC-001]
+- id: SEC-002
+  control: The write token and ownership key live only in publish environments limited to main.
+  applies-to: [examples/docs-sync.yml]
+  enforced-by: examples/docs-sync.yml
+  requirement: [NFR-SEC-002]
+- id: SEC-003
+  control: Ownership markers are HMAC-signed, and publish refuses pages without a valid signature.
+  applies-to: [src/publish/marker.ts, src/publish/publish.ts]
+  enforced-by: test/publish.test.ts
+  requirement: [NFR-SEC-002]
+- id: SEC-004
+  control: Publish checks the bundle hash, exact file set, commit, branch and config, and re-classifies risk.
+  applies-to: [src/publish/bundle.ts, src/publish/publish.ts]
+  enforced-by: test/publish.test.ts
+  requirement: [NFR-SEC-003]
+- id: SEC-005
+  control: Page bodies are built only from allowlisted ADF nodes; raw HTML and other link schemes are refused.
+  applies-to: [src/markdown/parse.ts, src/render/adf.ts]
+  enforced-by: test/markdown.test.ts
+  requirement: [NFR-SEC-003]
+- id: SEC-006
+  control: Plan and publish check space permissions and restrictions on the root and above it against the configured visibility.
+  applies-to: [src/plan/visibility.ts]
+  enforced-by: test/plan.test.ts
+  requirement: [NFR-SEC-004]
+- id: SEC-007
+  control: Diagrams are parsed without DTDs, stripped of scripts and unsafe links, and rendered as a non-root user with an empty environment.
+  applies-to: [src/diagrams/prepare.ts, src/diagrams/render]
+  enforced-by: test/diagrams.test.ts
+- id: SEC-008
+  control: Only the HTTP client may call fetch and only the renderer may start processes.
+  applies-to: [src/confluence/http, src/diagrams/render]
+  enforced-by: eslint.config.js
+- id: SEC-009
+  control: Lint fails on built-in secret patterns and configured deny patterns.
+  applies-to: [src/lint/content.ts]
+  enforced-by: test/check.test.ts
+- id: SEC-010
+  control: Actions and images are pinned by digest, workflows pass zizmor and Semgrep, and Grype fails on fixed high CVEs.
+  applies-to: [.github/workflows, Dockerfile]
+  enforced-by: .github/workflows/ci.yml
+- id: SEC-011
+  control: Releases push an attested image and an immutable release whose commit pins that image digest.
+  applies-to: [.github/workflows/release.yml]
+  enforced-by: .github/workflows/release.yml
+  requirement: [NFR-SEC-005]

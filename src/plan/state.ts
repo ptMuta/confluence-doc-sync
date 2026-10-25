@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Root } from '../config/schema.ts'
 import type { Reader } from '../confluence/reader.ts'
 import { error, type Finding } from '../findings.ts'
 
@@ -25,10 +26,10 @@ export interface Owned {
 
 export async function currentState(
   reader: Reader,
-  root: string,
+  root: Root,
   configFile: string,
 ): Promise<{ owned: Owned[]; findings: Finding[] }> {
-  const nodes = (await reader.descendants(root)).filter(
+  const nodes = (await reader.descendants(root.type, root.id)).filter(
     node => node.type === 'page' && (node.status ?? 'current') === 'current',
   )
   const owned: Owned[] = []

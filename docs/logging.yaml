@@ -1,0 +1,16 @@
+- id: LOG-001
+  events: [lint finding]
+  fields: [rule, file, line, message]
+  destination: GitHub Actions annotations
+  retention: Workflow log retention, 90 days by default
+- id: LOG-002
+  events: [plan, publish]
+  fields: [change counts, risk, bundle hash]
+  destination: GitHub job log and job summary
+  retention: Workflow log retention, 90 days by default
+  never-log: [page bodies, page titles, API responses]
+- id: LOG-003
+  events: [plan]
+  fields: [full plan]
+  destination: Workflow artifact docs-sync-plan
+  retention: Artifact retention of the workflow

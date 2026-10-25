@@ -1,5 +1,5 @@
 import { analyze } from '../check.ts'
-import type { Config } from '../config/schema.ts'
+import { rootOf, type Config } from '../config/schema.ts'
 import { cloudId, writeClient, type WriteHttp } from '../confluence/http/client.ts'
 import { cloudReader } from '../confluence/reader.ts'
 import { cloudWriter, missingWriteScopes } from '../confluence/writer.ts'
@@ -89,11 +89,11 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
     if (op.kind === 'create') {
       const other = byKey.get(op.key)
       if (other) problems.push(`${where}: page ${other.id} already holds this source`)
-      if (!parentOk(op.parent)) problems.push(`${where}: the parent is not the root page or a page this tool owns`)
+      if (!parentOk(op.parent)) problems.push(`${where}: the parent is not the root or a page this tool owns`)
     } else {
       const current = byKey.get(op.key)
       if (current?.id !== op.page) {
-        problems.push(`${where}: page ${op.page} does not hold this source under the root page`)
+        problems.push(`${where}: page ${op.page} does not hold this source under the root`)
         continue
       }
       if (!signed(current)) {
@@ -106,7 +106,7 @@ function checkOps(bundle: Bundle, ops: readonly Classified[], owned: readonly Ow
       if (current.edited && op.kind !== 'archive' && !overwrites)
         problems.push(`${where}: page ${op.page} was edited in Confluence after the plan; plan again`)
       if (op.kind === 'move' && !parentOk(op.to))
-        problems.push(`${where}: the new parent is not the root page or a page this tool owns`)
+        problems.push(`${where}: the new parent is not the root or a page this tool owns`)
       if (op.kind === 'archive' && pages.has(op.key)) problems.push(`${where}: the plan also writes this page`)
     }
     if ((op.kind === 'create' || op.kind === 'update') && pages.get(op.key)?.title !== op.title)
@@ -138,7 +138,9 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
   const analysis = await analyze(root, configFile, undefined)
   const { config, sources } = analysis
   if (!config || !sources || hasErrors(analysis.findings)) return { findings: analysis.findings }
-  const { site, space: spaceKey, 'root-page': rootPage } = config.confluence
+  const { site, space: spaceKey } = config.confluence
+  const target = rootOf(config)
+  const at = `/api/v2/${target.type}s/${target.id}`
 
   let bundle: Bundle
   try {
@@ -158,7 +160,7 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
   const differs = [
     ['site', plan.site, site],
     ['space', plan.space.key, spaceKey],
-    ['root-page', plan.root, rootPage],
+    ['root', plan.root, `${target.type}:${target.id}`],
     ['approval', plan.approval, config.approval],
   ].flatMap(([name, planned, configured]) => (planned === configured ? [] : [name]))
   if (differs.length) return fail('publish/config', `The plan does not match the config: ${differs.join(', ')}`)
@@ -183,10 +185,10 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
       reader,
       [
         `/api/v2/spaces?keys=${spaceKey}`,
-        `/api/v2/pages/${rootPage}`,
-        `/api/v2/pages/${rootPage}/permissions?limit=1`,
-        `/api/v2/pages/${rootPage}/descendants?limit=1&depth=1`,
-        `/api/v2/pages/${rootPage}/attachments?limit=1`,
+        at,
+        `${at}/permissions?limit=1`,
+        `${at}/descendants?limit=1&depth=1`,
+        '/api/v2/pages/0/attachments?limit=1',
         ...(config.confluence.readers ? ['/rest/api/group/by-id?id=0'] : []),
       ],
       spaceKey,
@@ -201,12 +203,12 @@ export async function publish(options: PublishOptions): Promise<PublishResult> {
   findings.push(...visibility.findings)
   if (hasErrors(findings)) return { findings }
   if (canonical(visibility.visibility) !== canonical(plan.visibility))
-    return fail('publish/visibility', 'Who can view the root page changed since the plan; plan again')
+    return fail('publish/visibility', 'Who can view the root changed since the plan; plan again')
 
-  const state = await currentState(reader, rootPage, configFile)
+  const state = await currentState(reader, target, configFile)
   findings.push(...state.findings)
   if (hasErrors(findings)) return { findings }
-  const problems = checkOps(bundle, ops, state.owned, options.ownershipKey, rootPage)
+  const problems = checkOps(bundle, ops, state.owned, options.ownershipKey, target.id)
   if (problems.length) {
     findings.push(...problems.map(problem => error('publish/op', configFile, 1, problem)))
     return { findings }

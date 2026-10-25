@@ -1,3 +1,4 @@
+import { rootOf } from '../config/schema.ts'
 import { posix } from 'node:path'
 import { analyze } from '../check.ts'
 import { cloudId, readClient, type Http } from '../confluence/http/client.ts'
@@ -68,7 +69,9 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
   if (sources.diagrams.length && !render) return fail('plan/render', 'draw.io is needed to render diagrams')
   const renderer: Renderer = render ?? (() => Promise.reject(new Error('no renderer')))
 
-  const { site, space: spaceKey, 'root-page': rootPage, readers } = config.confluence
+  const { site, space: spaceKey, readers } = config.confluence
+  const target = rootOf(config)
+  const at = `/api/v2/${target.type}s/${target.id}`
   const connection = options.connect
     ? await options.connect(site, token)
     : await connectCloud(site, token, config.confluence['cloud-id'])
@@ -80,9 +83,9 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
     reader,
     [
       `/api/v2/spaces?keys=${[spaceKey, ...sourceSpaces].join(',')}`,
-      `/api/v2/pages/${rootPage}`,
-      `/api/v2/pages/${rootPage}/permissions?limit=1`,
-      `/api/v2/pages/${rootPage}/descendants?limit=1&depth=1`,
+      at,
+      `${at}/permissions?limit=1`,
+      `${at}/descendants?limit=1&depth=1`,
       ...(sourceSpaces.length ? ['/rest/api/content/search?cql=type%3Dfolder&limit=1', '/api/v2/folders/0'] : []),
       ...(readers ? ['/rest/api/group/by-id?id=0'] : []),
     ],
@@ -92,7 +95,8 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
 
   const space = await reader.space(spaceKey)
   if (!space) return fail('plan/space', `Space ${spaceKey} was not found or the token cannot see it`)
-  if (!(await reader.item('page', rootPage))) return fail('plan/root', `Root page ${rootPage} was not found`)
+  if (!(await reader.item(target.type, target.id)))
+    return fail('plan/root', `Root ${target.type} ${target.id} was not found`)
 
   const visibility = await checkVisibility(reader, config, space, configFile)
   const refUses = uses(sources)
@@ -113,8 +117,8 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
     resolved: refs.resolved,
     ...(server && repo && commit ? { blobUrl: `${server}/${repo}/blob/${commit}` } : {}),
   })
-  const state = await currentState(reader, rootPage, configFile)
-  const changes = diff(desired.pages, state.owned, rootPage)
+  const state = await currentState(reader, target, configFile)
+  const changes = diff(desired.pages, state.owned, target.id)
   const titles = new Map<string, string | undefined>()
   for (const op of changes.ops)
     if (op.kind === 'create' || (op.kind === 'update' && op.changes.includes('title')))
@@ -140,7 +144,7 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
       site,
       cloudId: connection.cloudId,
       space: { key: space.key, id: space.id },
-      root: rootPage,
+      root: `${target.type}:${target.id}`,
       approval: config.approval,
       risk,
       visibility: visibility.visibility,
