@@ -21,6 +21,7 @@ export interface Node {
   readonly title: string
   readonly parentId?: string
   readonly status?: string
+  readonly childPosition?: number
 }
 
 interface Permission {
@@ -40,7 +41,7 @@ export interface Reader {
   readonly space: (key: string) => Promise<Space | undefined>
   readonly item: (type: Item['type'], id: string) => Promise<Item | undefined>
   readonly descendants: (type: Item['type'], id: string) => Promise<Node[]>
-  readonly children: (folderId: string) => Promise<Node[]>
+  readonly children: (type: Item['type'], id: string) => Promise<Node[]>
   readonly property: (type: Item['type'], id: string, key: string) => Promise<unknown>
   readonly labels: (pageId: string) => Promise<string[]>
   readonly attachments: (pageId: string) => Promise<Attachment[]>
@@ -99,7 +100,10 @@ export function cloudReader(http: Http): Reader {
       }
     },
     descendants: (type, id) => http.pages<Node>(`/api/v2/${type}s/${q(id)}/descendants?depth=10&limit=250`),
-    children: id => http.pages<Node>(`/api/v2/folders/${q(id)}/direct-children?limit=250`),
+    children: async (type, id) =>
+      (await http.pages<Node>(`/api/v2/${type}s/${q(id)}/direct-children?limit=250`)).sort(
+        (a, b) => (a.childPosition ?? 0) - (b.childPosition ?? 0),
+      ),
     property: async (type, id, key) =>
       (await http.get<{ results: { value: unknown }[] }>(`/api/v2/${type}s/${q(id)}/properties?key=${q(key)}`))
         .results[0]?.value,

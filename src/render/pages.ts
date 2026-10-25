@@ -1,5 +1,6 @@
 import { posix } from 'node:path'
 import type { Config } from '../config/schema.ts'
+import { humanize } from '../model/text.ts'
 import type { Decision, Sources } from '../source/load.ts'
 import { catalogKinds, catalogSchemas, linkFields, type CatalogKind } from '../source/schemas.ts'
 import {
@@ -7,8 +8,10 @@ import {
   bulletList,
   convert,
   doc,
+  heading,
   joined,
   link,
+  pageHref,
   panel,
   paragraph,
   refLink,
@@ -24,6 +27,7 @@ export interface RenderedPage {
   readonly parent?: string
   readonly labels: readonly string[]
   readonly body: Node
+  readonly overview?: true
 }
 
 const catalogTitles: Record<CatalogKind, string> = {
@@ -37,8 +41,6 @@ export function folderOf(path: string, docs: string): string | undefined {
   const dir = posix.relative(docs, posix.dirname(path))
   return dir && !dir.startsWith('..') ? `${posix.join(docs, dir)}/` : undefined
 }
-
-const label = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
 
 const sorted = (values: Iterable<string>): string[] => [...new Set(values)].sort()
 
@@ -120,7 +122,7 @@ function decisionPage(
     key: decision.file,
     title: `${meta.id} ${meta.title}`,
     parent,
-    labels: sorted([...(meta.tags ?? []), ...own.map(item => label(item.ref))]),
+    labels: sorted(meta.tags ?? []),
     body: doc(content),
   }
 }
@@ -129,7 +131,7 @@ const state = (decision: Decision, resolver: Resolver): Node[] => {
   const { meta } = decision
   if (meta['superseded-by']) return [...text('Superseded by '), ...refLink(meta['superseded-by'], resolver)]
   if (meta.retired) return text(`Retired ${meta.retired.date}`)
-  return text('In force')
+  return text('Active')
 }
 
 function catalogPage(kind: CatalogKind, entries: Sources['entries'], config: Config, resolver: Resolver): RenderedPage {
@@ -148,13 +150,8 @@ function catalogPage(kind: CatalogKind, entries: Sources['entries'], config: Con
   const file = config.catalogs[kind]
   return {
     key: file,
-    title: `${config.system}: ${catalogTitles[kind]}`,
-    labels: sorted(
-      entries.flatMap(entry => [
-        ...(entry.value.tags ?? []),
-        ...[...strings(entry.value['realizes']), ...strings(entry.value['constrained-by'])].map(label),
-      ]),
-    ),
+    title: catalogTitles[kind],
+    labels: sorted(entries.flatMap(entry => entry.value.tags ?? [])),
     body: doc([
       table(
         fields.map(key => text(key === 'id' ? 'Id' : columnName(key))),
@@ -162,6 +159,28 @@ function catalogPage(kind: CatalogKind, entries: Sources['entries'], config: Con
       ),
     ]),
   }
+}
+
+function upstreamTable(links: readonly Upstream[], resolver: Resolver): Node[] {
+  if (!links.length) return []
+  const by = (ref: string, relation: Upstream['relation']) =>
+    joined(
+      links
+        .filter(item => item.ref === ref && item.relation === relation)
+        .map(item => [...refLink(item.from, resolver), ...text(item.note ? ` (${item.note})` : '')]),
+    )
+  return [
+    heading(2, text('Upstream decisions')),
+    table(
+      [text('Upstream decision'), text('Realized by'), text('Constrained'), text('Deviations')],
+      sorted(links.map(item => item.ref)).map(ref => [
+        refLink(ref, resolver),
+        by(ref, 'realizes'),
+        by(ref, 'constrained-by'),
+        by(ref, 'deviates-from'),
+      ]),
+    ),
+  ]
 }
 
 export function renderPages(config: Config, sources: Sources, resolver: Resolver): RenderedPage[] {
@@ -178,11 +197,13 @@ export function renderPages(config: Config, sources: Sources, resolver: Resolver
   })
 
   if (sources.decisions.length) {
-    const section = config.decisions.folder
+    const section = `${config.decisions.folder}/`
     const decisions = [...sources.decisions].sort((a, b) => a.meta.id.localeCompare(b.meta.id))
     pages.push({
-      key: section,
-      title: `${config.system}: ${config.decisions.label}s`,
+      key: config.decisions.folder,
+      title: `${humanize(posix.basename(config.decisions.folder))} overview`,
+      parent: section,
+      overview: true,
       labels: [],
       body: doc([
         table(
@@ -194,6 +215,7 @@ export function renderPages(config: Config, sources: Sources, resolver: Resolver
             state(decision, resolver),
           ]),
         ),
+        ...upstreamTable(links, resolver),
       ]),
     })
     pages.push(...decisions.map(decision => decisionPage(decision, links, resolver, section)))
@@ -203,31 +225,48 @@ export function renderPages(config: Config, sources: Sources, resolver: Resolver
     const entries = sources.entries.filter(entry => entry.catalog === kind)
     if (entries.length) pages.push(catalogPage(kind, entries, config, resolver))
   }
+  return withOverviews(pages, config.docs)
+}
 
-  if (links.length) {
-    const refs = sorted(links.map(item => item.ref))
-    const by = (ref: string, relation: Upstream['relation']) =>
-      joined(
-        links
-          .filter(item => item.ref === ref && item.relation === relation)
-          .map(item => [...refLink(item.from, resolver), ...text(item.note ? ` (${item.note})` : '')]),
-      )
-    pages.push({
-      key: 'coverage',
-      title: `${config.system}: Upstream decisions`,
-      labels: [],
-      body: doc([
-        table(
-          [text('Upstream decision'), text('Realized by'), text('Constrained'), text('Deviations')],
-          refs.map(ref => [
-            refLink(ref, resolver),
-            by(ref, 'realizes'),
-            by(ref, 'constrained-by'),
-            by(ref, 'deviates-from'),
-          ]),
-        ),
-      ]),
+const overviewFiles = new Set(['overview.md', 'index.md', 'readme.md'])
+
+function withOverviews(pages: readonly RenderedPage[], docs: string): RenderedPage[] {
+  const marked = pages.map(page =>
+    overviewFiles.has(posix.basename(page.key).toLowerCase()) ? { ...page, overview: true as const } : page,
+  )
+  const folders = new Set<string>()
+  for (const page of marked)
+    for (let key = page.parent; key && !folders.has(key); key = folderOf(key, docs)) folders.add(key)
+  const overviewOf = new Map(
+    [...folders].map(folder => [
+      folder,
+      marked.find(page => page.parent === folder && page.overview)?.key ?? folder.slice(0, -1),
+    ]),
+  )
+  const generated = [...folders]
+    .filter(folder => !marked.some(page => page.parent === folder && page.overview))
+    .sort()
+    .map(folder => {
+      const subfolders = [...folders].filter(other => folderOf(other, docs) === folder).sort()
+      const children = marked
+        .filter(page => page.parent === folder)
+        .sort((a, b) => a.title.localeCompare(b.title))
+        .map(page => link(page.title, pageHref(page.key)))
+      return {
+        key: folder.slice(0, -1),
+        title: `${humanize(posix.basename(folder))} overview`,
+        parent: folder,
+        overview: true as const,
+        labels: [],
+        body: doc([
+          bulletList(
+            [
+              ...subfolders.map(sub => link(humanize(posix.basename(sub)), pageHref(overviewOf.get(sub) ?? ''))),
+              ...children,
+            ].map(item => [paragraph(item)]),
+          ),
+        ]),
+      }
     })
-  }
-  return pages
+  return [...marked, ...generated]
 }

@@ -21,6 +21,7 @@ export type Op =
       readonly changes: readonly ('content' | 'title' | 'manual-edit')[]
     }
   | { readonly kind: 'move'; readonly key: string; readonly page: string; readonly from: string; readonly to: Parent }
+  | { readonly kind: 'order'; readonly key: string; readonly page?: string | undefined }
   | {
       readonly kind: 'archive'
       readonly key: string
@@ -41,6 +42,7 @@ export function diff(
   folders: readonly DesiredFolder[],
   owned: readonly Owned[],
   root: string,
+  overviews: ReadonlySet<string> = new Set(),
 ): { ops: Op[]; findings: Finding[] } {
   const byKey = new Map(owned.map(page => [page.key, page]))
   const parentOf = (page: DesiredPage | DesiredFolder): Parent => {
@@ -58,10 +60,13 @@ export function diff(
     const parent = parentOf(page)
     if (!current) {
       ops.push({ kind: 'create', key: page.key, title: page.title, parent })
+      if (overviews.has(page.key)) ops.push({ kind: 'order', key: page.key })
       continue
     }
-    if (!('page' in parent) || parent.page !== current.parentId)
-      ops.push({ kind: 'move', key: page.key, page: current.id, from: current.parentId, to: parent })
+    const moved = !('page' in parent) || parent.page !== current.parentId
+    if (moved) ops.push({ kind: 'move', key: page.key, page: current.id, from: current.parentId, to: parent })
+    if (overviews.has(page.key) && (moved || !current.first))
+      ops.push({ kind: 'order', key: page.key, page: current.id })
     const changes = [
       ...(current.hash !== page.hash ? (['content'] as const) : []),
       ...(current.title !== page.title ? (['title'] as const) : []),
@@ -109,6 +114,8 @@ export function classify(ops: readonly Op[], deviating: ReadonlySet<string>): Cl
         return { op, risky: op.folder ? 'deletes a folder' : 'archives a page' }
       case 'move':
         return { op, risky: 'moves a page' }
+      case 'order':
+        return { op }
       case 'update':
         if (op.changes.includes('manual-edit')) return { op, risky: 'overwrites a manual edit' }
         if (op.changes.includes('content') && deviating.has(op.key))

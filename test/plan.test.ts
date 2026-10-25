@@ -34,17 +34,30 @@ async function publishAll(): Promise<Plan> {
   const first = await bundle()
   let next = 5000
   const ids = new Map<string, string>()
-  for (const page of first.pages) ids.set(page.key, String(next++))
-  for (const page of first.pages)
+  const folders = first.ops.flatMap(({ op }) => (op.kind === 'create' && op.folder ? [op] : []))
+  const overviews = new Set(first.ops.flatMap(({ op }) => (op.kind === 'order' ? [op.key] : [])))
+  for (const item of [...folders, ...first.pages]) ids.set(item.key, String(next++))
+  const page = (item: Plan['pages'][number]) =>
     confluence.add({
-      id: ids.get(page.key) ?? '',
+      id: ids.get(item.key) ?? '',
       type: 'page',
-      title: page.title,
-      parentId: page.parent ? (ids.get(page.parent) ?? '') : '123456',
+      title: item.title,
+      parentId: item.parent ? (ids.get(item.parent) ?? '') : '123456',
       parentType: 'page',
       version: 3,
-      marker: { source: page.key, hash: page.hash, version: 3 },
+      marker: { source: item.key, hash: item.hash, version: 3 },
     })
+  first.pages.filter(item => overviews.has(item.key)).forEach(page)
+  for (const folder of folders)
+    confluence.add({
+      id: ids.get(folder.key) ?? '',
+      type: 'folder',
+      title: folder.title,
+      parentId: '123456',
+      parentType: 'page',
+      marker: { source: folder.key, hash: '', version: 0 },
+    })
+  first.pages.filter(item => !overviews.has(item.key)).forEach(page)
   return first
 }
 
@@ -61,7 +74,14 @@ describe('plan', () => {
     expect(rules(first.findings, 'warning')).toContain('refs/lock')
     expect(first.outcome?.risk).toBe('high')
     expect(first.outcome?.lockChanged).toBe(true)
-    expect(first.outcome?.ops.map(({ op }) => op.kind)).toEqual(Array(9).fill('create'))
+    expect(first.outcome?.ops.map(({ op }) => op.kind)).toEqual([
+      'create',
+      'create',
+      'order',
+      'create',
+      'order',
+      ...Array<string>(6).fill('create'),
+    ])
     const written = await bundle()
     expect(written.space).toEqual({ key: 'DOCS', id: 'space-DOCS' })
     expect(JSON.stringify(written.pages)).toContain('docs-sync:page/docs%2Fdecisions%2FDEC-0002-private-endpoints.md')
@@ -126,7 +146,7 @@ describe('plan', () => {
             kind: 'update',
             key: 'docs/monitoring.yaml',
             page: monitoring.id,
-            title: 'Payments: Monitoring use cases',
+            title: 'Monitoring use cases',
             changes: ['manual-edit'],
           },
           risky: 'overwrites a manual edit',
@@ -140,7 +160,7 @@ describe('plan', () => {
     )
     expect(result.outcome?.ops).toHaveLength(4)
     expect((await bundle()).pages.map(page => page.key).sort()).toEqual(['docs/monitoring.yaml', 'docs/overview.md'])
-    expect(published.pages).toHaveLength(9)
+    expect(published.pages).toHaveLength(8)
   })
 
   it('names every missing scope before reading anything else', async () => {
@@ -242,7 +262,7 @@ describe('plan', () => {
     expect((await plan(options())).findings.at(-1)?.rule).toBe('plan/root')
     await config(text => text.replace('space: DOCS', 'space: NOPE'))
     expect((await plan(options())).findings.at(-1)?.rule).toBe('plan/space')
-    await config(() => 'system: x\n')
+    await config(() => 'confluence: { site: bad, space: DOCS, root-page: "1" }\n')
     expect(rules((await plan(options())).findings)).toEqual(['schema'])
   })
 

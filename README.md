@@ -18,7 +18,7 @@ Publish does not trust the plan blindly. Before it writes, it confirms the plan 
 
 ## Writing docs
 
-Every Markdown file under `docs` becomes a Confluence page. Subfolders become Confluence folders, and draw.io diagrams in a page are rendered and attached.
+Every Markdown file under `docs` becomes a Confluence page. Subfolders become Confluence folders, and draw.io diagrams in a page are rendered and attached. Each folder starts with an overview page that links to its pages. Name a file `overview.md`, `index.md` or `readme.md` to write your own.
 
 A page's title comes from `title` in its front matter, or its first `#` heading, or its file name. Front matter is optional.
 
@@ -26,7 +26,7 @@ To use a page type, list it under `types` in the config:
 
 | Type            | What it adds                                                                            |
 | --------------- | --------------------------------------------------------------------------------------- |
-| `decisions`     | Decision records in their own folder, with an index page                                |
+| `decisions`     | Decision records in their own folder, with an overview page                             |
 | `requirements`  | A requirements page                                                                     |
 | `security`      | A security controls page                                                                |
 | `logging`       | A logging page                                                                          |
@@ -68,7 +68,6 @@ Required reviewers on environments only work in public repos or on GitHub Enterp
 
 | Key                      | Default                 | Meaning                                                                           |
 | ------------------------ | ----------------------- | --------------------------------------------------------------------------------- |
-| `system`                 | required                | System name, added in front of page titles                                        |
 | `confluence.site`        | required                | Your site, `<name>.atlassian.net`                                                 |
 | `confluence.cloud-id`    | none                    | Locks the site to this cloud id                                                   |
 | `confluence.space`       | required                | Space key                                                                         |

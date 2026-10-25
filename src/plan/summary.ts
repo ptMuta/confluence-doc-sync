@@ -16,8 +16,8 @@ export async function summarize(bundlePath: string, outcome: Outcome): Promise<v
   if (!process.env['GITHUB_STEP_SUMMARY']) return
   await core.summary
     .addTable([
-      ['Create', 'Update', 'Move', 'Archive', 'Risky', 'Risk'].map(data => ({ data, header: true })),
-      [count('create'), count('update'), count('move'), count('archive'), risky, risk],
+      ['Create', 'Update', 'Move', 'Reorder', 'Archive', 'Risky', 'Risk'].map(data => ({ data, header: true })),
+      [count('create'), count('update'), count('move'), count('order'), count('archive'), risky, risk],
     ])
     .addRaw(`Bundle SHA-256: \`${sha256}\``, true)
     .addRaw(lockChanged ? '\n\nThe lock file changed: commit docs-sync.lock from the plan bundle.' : '', true)
@@ -25,15 +25,15 @@ export async function summarize(bundlePath: string, outcome: Outcome): Promise<v
 }
 
 export async function published(applied: NonNullable<PublishResult['applied']>): Promise<void> {
-  const { create, update, move, archive } = applied
+  const { create, update, move, order, archive } = applied
   core.info(
-    `Published: ${String(create)} created, ${String(update)} updated, ${String(move)} moved, ${String(archive)} archived`,
+    `Published: ${String(create)} created, ${String(update)} updated, ${String(move)} moved, ${String(order)} reordered, ${String(archive)} archived`,
   )
   if (!process.env['GITHUB_STEP_SUMMARY']) return
   await core.summary
     .addTable([
-      ['Created', 'Updated', 'Moved', 'Archived'].map(data => ({ data, header: true })),
-      [create, update, move, archive].map(String),
+      ['Created', 'Updated', 'Moved', 'Reordered', 'Archived'].map(data => ({ data, header: true })),
+      [create, update, move, order, archive].map(String),
     ])
     .write()
 }

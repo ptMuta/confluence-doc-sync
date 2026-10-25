@@ -39,7 +39,6 @@ const referenceSource = z.strictObject({
 })
 
 export const configSchema = z.strictObject({
-  system: z.string().trim().min(1),
   confluence: z
     .strictObject({
       site: z.string().regex(/^[a-z0-9][a-z0-9-]*\.atlassian\.net$/, 'Must be a <name>.atlassian.net host'),

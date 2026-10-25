@@ -52,7 +52,7 @@ describe('parseYaml', () => {
 })
 
 describe('configSchema', () => {
-  const base = { system: 'S', confluence: { site: 'a.atlassian.net', space: 'DOCS', 'root-page': 1 } }
+  const base = { confluence: { site: 'a.atlassian.net', space: 'DOCS', 'root-page': 1 } }
   it('applies defaults', () => {
     const config = configSchema.parse(base)
     expect(config.confluence['root-page']).toBe('1')

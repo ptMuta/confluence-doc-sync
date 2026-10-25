@@ -15,6 +15,7 @@ export interface FakeItem {
   labels?: string[]
   readers?: string[]
   space?: string
+  position?: number
 }
 
 export class FakeConfluence {
@@ -24,11 +25,12 @@ export class FakeConfluence {
   readonly writes: string[] = []
   readonly archived = new Set<string>()
   private next = 7000
+  private order = 0
   access: { principalType: string; principalId: string }[] = []
   groups: Record<string, string> = {}
 
   add(item: FakeItem): this {
-    this.items.set(item.id, { space: 'DOCS', ...item })
+    this.items.set(item.id, { space: 'DOCS', position: this.order++, ...item })
     return this
   }
 
@@ -100,19 +102,25 @@ export class FakeConfluence {
           return {
             results: [...this.items.values()]
               .filter(other => this.under(other.id, id))
-              .map(({ id: key, type: kind, title, parentId }) => ({
+              .map(({ id: key, type: kind, title, parentId, position }) => ({
                 id: key,
                 type: kind,
                 title,
                 parentId,
                 status: 'current',
+                childPosition: position,
               })),
           }
         case 'direct-children':
           return {
             results: [...this.items.values()]
               .filter(other => other.parentId === id)
-              .map(({ id: key, type: kind, title }) => ({ id: key, type: kind, title })),
+              .map(({ id: key, type: kind, title, position }) => ({
+                id: key,
+                type: kind,
+                title,
+                childPosition: position,
+              })),
           }
         case 'properties':
           return {
@@ -202,7 +210,13 @@ export class FakeConfluence {
       return {}
     }
     if ((m = /^\/rest\/api\/content\/(\d+)\/move\/append\/(\d+)$/.exec(p))) {
-      this.page(m[1] ?? '').parentId = m[2] ?? ''
+      Object.assign(this.page(m[1] ?? ''), { parentId: m[2] ?? '', position: this.order++ })
+      return {}
+    }
+    if ((m = /^\/rest\/api\/content\/(\d+)\/move\/before\/(\d+)$/.exec(p))) {
+      const sibling = this.items.get(m[2] ?? '')
+      if (!sibling) throw new HttpError(404, path, '', method)
+      Object.assign(this.page(m[1] ?? ''), { parentId: sibling.parentId, position: (sibling.position ?? 0) - 0.5 })
       return {}
     }
     if (p === '/rest/api/content/archive') {

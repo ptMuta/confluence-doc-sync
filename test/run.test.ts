@@ -123,13 +123,16 @@ describe('run', () => {
       'ownership-key': 'key',
       'change-author': 'someone',
     })
-    publisher.publish.mockResolvedValue({ findings: [], applied: { create: 2, update: 1, move: 0, archive: 0 } })
+    publisher.publish.mockResolvedValue({
+      findings: [],
+      applied: { create: 2, update: 1, move: 0, order: 1, archive: 0 },
+    })
     await run()
     expect(core.setFailed).not.toHaveBeenCalled()
     expect(publisher.publish).toHaveBeenCalledWith(
       expect.objectContaining({ bundlePath: 'docs-sync-plan', tier: 'high-risk', author: 'someone' }),
     )
-    expect(core.info).toHaveBeenCalledWith('Published: 2 created, 1 updated, 0 moved, 0 archived')
+    expect(core.info).toHaveBeenCalledWith('Published: 2 created, 1 updated, 0 moved, 1 reordered, 0 archived')
     expect(await readFile(summary, 'utf8')).toContain('Archived')
     vi.stubEnv('GITHUB_STEP_SUMMARY', '')
     publisher.publish.mockResolvedValue({ findings: [] })

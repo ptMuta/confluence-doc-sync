@@ -119,7 +119,7 @@ export async function plan(options: PlanOptions): Promise<PlanResult> {
     ...(server && repo && commit ? { blobUrl: `${server}/${repo}/blob/${commit}` } : {}),
   })
   const state = await currentState(reader, target, configFile)
-  const changes = diff(desired.pages, desired.folders, state.owned, target.id)
+  const changes = diff(desired.pages, desired.folders, state.owned, target.id, desired.overviews)
   const titles = new Map<string, string | undefined>()
   for (const op of changes.ops)
     if ((op.kind === 'create' && !op.folder) || (op.kind === 'update' && op.changes.includes('title')))

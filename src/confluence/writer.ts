@@ -15,6 +15,7 @@ export interface Writer {
   readonly addLabels: (pageId: string, names: readonly string[]) => Promise<void>
   readonly removeLabel: (pageId: string, name: string) => Promise<void>
   readonly move: (pageId: string, parentId: string) => Promise<void>
+  readonly moveBefore: (pageId: string, siblingId: string) => Promise<void>
   readonly archive: (pageIds: readonly string[]) => Promise<void>
 }
 
@@ -90,6 +91,9 @@ export function cloudWriter(http: WriteHttp, pause = wait): Writer {
     },
     move: async (pageId, parentId) => {
       await http.send('PUT', `/rest/api/content/${q(pageId)}/move/append/${q(parentId)}`)
+    },
+    moveBefore: async (pageId, siblingId) => {
+      await http.send('PUT', `/rest/api/content/${q(pageId)}/move/before/${q(siblingId)}`)
     },
     archive: async pageIds => {
       const task = await http.send<{ id: string }>('POST', '/rest/api/content/archive', {

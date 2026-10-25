@@ -47,7 +47,7 @@ export const paragraph = (content: readonly Node[]): Node => ({
   }, []),
 })
 
-const heading = (level: number, content: readonly Node[]): Node => ({
+export const heading = (level: number, content: readonly Node[]): Node => ({
   type: 'heading',
   attrs: { level },
   content,
@@ -87,6 +87,9 @@ export const anchor = (name: string): Node => ({
     },
   },
 })
+
+export const pageHref = (key: string, anchor?: string): string =>
+  `docs-sync:page/${encodeURIComponent(key)}${anchor ? `#${anchor}` : ''}`
 
 export const link = (label: string, href: string | undefined): Node[] =>
   text(label, href ? [{ type: 'link', attrs: { href } }] : [])

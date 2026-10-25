@@ -1,4 +1,3 @@
-system: Payments
 confluence:
   site: example.atlassian.net
   space: DOCS
