@@ -1,5 +1,5 @@
 # Security
 
-Report suspected vulnerabilities privately to the repository owner, @ptMuta. Do not put details in issues or pull requests.
+Report suspected vulnerabilities through [private vulnerability reporting](https://github.com/ptMuta/git-confluence-sync/security/advisories/new). Do not put details in issues or pull requests.
 
 Only the latest release receives fixes.
