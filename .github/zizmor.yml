@@ -3,3 +3,6 @@ rules:
     ignore:
       - docs-sync.yml
       - docs-sync-approve.yml
+  self-repository:
+    ignore:
+      - docs-sync.yml
