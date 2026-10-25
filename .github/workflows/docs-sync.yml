@@ -13,6 +13,13 @@ on:
         description: Edge image built by this run, or empty for the current edge tag
         type: string
         default: ''
+    secrets:
+      CONFLUENCE_READ_CLIENT_SECRET:
+        required: false
+      CONFLUENCE_WRITE_CLIENT_SECRET:
+        required: false
+      DOCS_SYNC_OWNERSHIP_KEY:
+        required: false
 
 permissions: {}
 
