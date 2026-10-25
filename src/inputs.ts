@@ -2,7 +2,8 @@ const modes = ['check', 'plan', 'publish'] as const
 export type Mode = (typeof modes)[number]
 
 const gated = [
-  'confluence-token',
+  'confluence-client-id',
+  'confluence-client-secret',
   'bundle-path',
   'expected-bundle-sha256',
   'environment-tier',
@@ -11,11 +12,11 @@ const gated = [
 ] as const
 type Gated = (typeof gated)[number]
 
-const secrets: readonly Gated[] = ['confluence-token', 'ownership-key']
+const secrets: readonly Gated[] = ['confluence-client-id', 'confluence-client-secret', 'ownership-key']
 
 const accepts: Record<Mode, readonly Gated[]> = {
   check: [],
-  plan: ['confluence-token', 'bundle-path'],
+  plan: ['confluence-client-id', 'confluence-client-secret', 'bundle-path'],
   publish: gated,
 }
 

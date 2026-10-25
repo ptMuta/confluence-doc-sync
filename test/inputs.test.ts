@@ -6,11 +6,12 @@ const reader = (values: Record<string, string>) => (name: string) => values[name
 describe('parseInputs', () => {
   it.each([
     ['check', {}],
-    ['plan', { 'confluence-token': 't', 'bundle-path': 'b' }],
+    ['plan', { 'confluence-client-id': 'i', 'confluence-client-secret': 's', 'bundle-path': 'b' }],
     [
       'publish',
       {
-        'confluence-token': 't',
+        'confluence-client-id': 'i',
+        'confluence-client-secret': 's',
         'bundle-path': 'b',
         'expected-bundle-sha256': 'h',
         'environment-tier': 'high-risk',
@@ -31,7 +32,7 @@ describe('parseInputs', () => {
   })
 
   it.each([
-    ['check', 'confluence-token'],
+    ['check', 'confluence-client-secret'],
     ['check', 'bundle-path'],
     ['plan', 'ownership-key'],
     ['plan', 'expected-bundle-sha256'],
@@ -43,13 +44,21 @@ describe('parseInputs', () => {
   it('masks secrets before refusing anything', () => {
     const mask = vi.fn()
     expect(() =>
-      parseInputs(reader({ mode: 'nope', 'confluence-token': 'token', 'ownership-key': 'key' }), mask),
+      parseInputs(
+        reader({
+          mode: 'nope',
+          'confluence-client-id': 'id',
+          'confluence-client-secret': 'secret',
+          'ownership-key': 'key',
+        }),
+        mask,
+      ),
     ).toThrow()
-    expect(mask.mock.calls).toEqual([['token'], ['key']])
+    expect(mask.mock.calls).toEqual([['id'], ['secret'], ['key']])
   })
 
   it('never puts values in errors', () => {
-    expect(() => parseInputs(reader({ mode: 'check', 'confluence-token': 'secret-value' }), vi.fn())).toThrow(
+    expect(() => parseInputs(reader({ mode: 'check', 'confluence-client-secret': 'secret-value' }), vi.fn())).toThrow(
       /^(?!.*secret-value)/,
     )
   })

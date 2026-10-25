@@ -29,14 +29,14 @@ This repository syncs its own docs to the Documentation folder in GCS. Pull requ
 
 Dependabot opens one pull request a week for npm, GitHub Actions and Docker, after a 7 day cooldown. For a security fix in the base image, move DEBIAN_SNAPSHOT in the Dockerfile forward. For a new draw.io version, change DRAWIO_VERSION and DRAWIO_SHA256 together and review the rendered samples from CI.
 
-## Confluence tokens
+## Confluence credentials
 
-The test site tokens expire after 30 days. To rotate a token:
+Plan and publish use OAuth credentials of the service account, see [[DEC-0015]]. Each run exchanges them for an access token that lasts an hour. To rotate a credential:
 
-1. Create a new scoped token for the service account with the scopes in the README.
-2. Replace the secret in the environments that hold it.
+1. Create a new OAuth credential for the service account with the scopes in the README.
+2. Replace the client ID and secret in the environments that hold them.
 3. Run the live-test workflow and check it passes.
-4. Revoke the old token.
+4. Revoke the old credential.
 
 ## Ownership key
 

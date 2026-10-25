@@ -87,8 +87,8 @@ jobs:
             echo "check mode passed the bad sample repo"
             exit 1
           fi
-          if sample good -e INPUT_MODE=check -e INPUT_CONFLUENCE-TOKEN=dummy; then
-            echo "check mode accepted a token"
+          if sample good -e INPUT_MODE=check -e INPUT_CONFLUENCE-CLIENT-SECRET=dummy; then
+            echo "check mode accepted a credential"
             exit 1
           fi
       - name: Render samples

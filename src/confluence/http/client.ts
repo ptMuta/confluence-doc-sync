@@ -47,6 +47,22 @@ export async function cloudId(site: string, get: Fetch = fetch): Promise<string>
   return id
 }
 
+export async function accessToken(clientId: string, clientSecret: string, get: Fetch = fetch): Promise<string> {
+  const path = '/oauth/token'
+  const response = await get(`https://auth.atlassian.com${path}`, {
+    method: 'POST',
+    redirect: 'error',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret }),
+  })
+  const text = await body(response, path)
+  if (!response.ok) throw new HttpError(response.status, path, text.slice(0, 200), 'POST')
+  const value: unknown = JSON.parse(text)
+  const token = typeof value === 'object' && value && 'access_token' in value ? value.access_token : undefined
+  if (typeof token !== 'string' || !token) throw new Error('Atlassian returned no access token')
+  return token
+}
+
 function client(cloud: string, token: string, get: Fetch, pause: typeof wait): WriteHttp {
   const base = `https://api.atlassian.com/ex/confluence/${cloud}/wiki`
   const request = async (method: string, path: string, payload?: unknown): Promise<unknown> => {
