@@ -2,20 +2,26 @@ name: docs-sync
 
 on:
   pull_request:
-    paths: &docs
+    paths:
       - .docs-sync/**
       - docs/**
       - docs-sync.lock
       - .github/workflows/docs-sync.yml
-  push:
-    branches: [main]
-    paths: *docs
+  workflow_call:
+    inputs:
+      image:
+        description: Edge image built by this run, or empty for the current edge tag
+        type: string
+        default: ''
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.event_name == 'push' && 'docs-sync-publish' || format('docs-sync-{0}', github.ref) }}
+  group: docs-sync-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/ptmuta/confluence-doc-sync
 
 jobs:
   check:
@@ -35,13 +41,16 @@ jobs:
 
   plan:
     name: Plan
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: docs-sync-read
     permissions:
       contents: read
+      packages: read # pull the edge image
+      attestations: read # verify the edge image
     outputs:
+      image: ${{ steps.image.outputs.image }}
       bundle-sha256: ${{ steps.plan.outputs.bundle-sha256 }}
       has-changes: ${{ steps.plan.outputs.has-changes }}
       risk: ${{ steps.plan.outputs.risk }}
@@ -49,12 +58,25 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - id: image
+        name: Verify the edge image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILT: ${{ inputs.image }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker pull "${BUILT:-$IMAGE:edge}"
+          image=$(docker inspect --format '{{index .RepoDigests 0}}' "${BUILT:-$IMAGE:edge}")
+          gh attestation verify "oci://$image" -R "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/ci.yml" --source-ref refs/heads/main
+          echo "image=$image" >> "$GITHUB_OUTPUT"
       - id: plan
-        uses: ptMuta/confluence-doc-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
-        with:
-          mode: plan
-          confluence-client-id: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
-          confluence-client-secret: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
+        name: Plan
+        env:
+          IMAGE_REF: ${{ steps.image.outputs.image }}
+          INPUT_MODE: plan
+          INPUT_CONFLUENCE-CLIENT-ID: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
+          INPUT_CONFLUENCE-CLIENT-SECRET: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
+        run: bash .github/run-image.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: docs-sync-plan
@@ -71,6 +93,8 @@ jobs:
     permissions:
       contents: read
       actions: read # download the plan artifact
+      packages: read # pull the edge image
+      attestations: read # verify the edge image
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -81,12 +105,22 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           REPO: ${{ github.repository }}
         run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
-      - uses: ptMuta/confluence-doc-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
-        with:
-          mode: publish
-          confluence-client-id: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}
-          confluence-client-secret: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
-          bundle-path: docs-sync-plan
-          expected-bundle-sha256: ${{ needs.plan.outputs.bundle-sha256 }}
-          environment-tier: ${{ vars.DOCS_SYNC_TIER }}
-          ownership-key: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
+      - name: Verify the edge image
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_REF: ${{ needs.plan.outputs.image }}
+        run: |
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker pull "$IMAGE_REF"
+          gh attestation verify "oci://$IMAGE_REF" -R "$GITHUB_REPOSITORY" --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/ci.yml" --source-ref refs/heads/main
+      - name: Publish
+        env:
+          IMAGE_REF: ${{ needs.plan.outputs.image }}
+          INPUT_MODE: publish
+          INPUT_CONFLUENCE-CLIENT-ID: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}
+          INPUT_CONFLUENCE-CLIENT-SECRET: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
+          INPUT_BUNDLE-PATH: docs-sync-plan
+          INPUT_EXPECTED-BUNDLE-SHA256: ${{ needs.plan.outputs.bundle-sha256 }}
+          INPUT_ENVIRONMENT-TIER: ${{ vars.DOCS_SYNC_TIER }}
+          INPUT_OWNERSHIP-KEY: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
+        run: bash .github/run-image.sh

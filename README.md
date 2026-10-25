@@ -110,6 +110,8 @@ To make a release, run the `release` workflow on `main` with a version: `v1.0.0`
 
 The same workflow makes a nightly pre-release each night, unless `main` has had only docs changes since the last one. It runs in a `nightly` environment without reviewers. Each nightly gets a `nightly-YYYYMMDD` tag and replaces the previous one, and its image is also tagged `nightly`. Release candidates are deleted once their final version ships. Final releases stay until you delete them.
 
+Each push to `main` that changes code also pushes an attested `edge` image, which this repo uses to publish its own docs.
+
 To test against a real Confluence site, run the `live-test` workflow. It runs `test/live/confluence.mjs`.
 
 Copyright © 2026 ptMuta. All rights reserved. This code is proprietary, and no license is granted.
