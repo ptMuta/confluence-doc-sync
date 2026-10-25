@@ -11,12 +11,12 @@ Content edits should sync without waiting, but new, moved and archived pages or 
 
 ## Options
 
-- Tiers set per environment: unreviewed, reviewed, approver
+- Tiers set per environment: low-risk, high-risk, manual
 - A reviewer for every publish
 
 ## Decision
 
-We use tiers set per environment because publish re-classifies every change and refuses risky ones in the unreviewed tier, whatever the plan job chose.
+We use tiers set per environment because publish re-classifies every change and refuses risky ones in the low-risk tier, whatever the plan job chose.
 
 ## Consequences
 

@@ -49,7 +49,7 @@ const run = (extra: Partial<PublishOptions> = {}) =>
     token: 'write',
     bundlePath: bundlePath(),
     expectedSha256: sha,
-    tier: 'reviewed',
+    tier: 'high-risk',
     ownershipKey: key,
     env: { GITHUB_SHA: 'abc', GITHUB_REF: 'refs/heads/main', GITHUB_ACTOR: 'muta' },
     connect: connect(),
@@ -126,19 +126,19 @@ describe('publish', () => {
 
     expect((await planned()).ops).toEqual([])
     confluence.writes.length = 0
-    expect((await run({ tier: 'unreviewed' })).applied).toEqual({ create: 0, update: 0, move: 0, archive: 0 })
+    expect((await run({ tier: 'low-risk' })).applied).toEqual({ create: 0, update: 0, move: 0, archive: 0 })
     expect(confluence.writes).toEqual([])
 
     await source('docs/overview.md', text => text.replace('two regions', 'three regions'))
     const update = await planned()
     expect(update.risk).toBe('low')
-    expect(errors((await run({ tier: 'unreviewed' })).findings)).toEqual([])
+    expect(errors((await run({ tier: 'low-risk' })).findings)).toEqual([])
     expect(confluence.writes.some(write => write.includes('attachment'))).toBe(false)
     expect(JSON.stringify(owned('docs/overview.md').body)).toContain('three regions')
     expect((await planned()).ops).toEqual([])
   })
 
-  it('moves, archives and overwrites manual edits only in a reviewed tier', async () => {
+  it('moves, archives and overwrites manual edits only in the high-risk tier', async () => {
     await sync()
     const overview = owned('docs/overview.md')
     owned('docs/logging.yaml').parentId = overview.id
@@ -157,8 +157,8 @@ describe('publish', () => {
     expect(changes.ops.map(({ op }) => op.kind).sort()).toEqual(['archive', 'move', 'update'])
 
     confluence.writes.length = 0
-    expect(errors((await run({ tier: 'unreviewed' })).findings)).toEqual([
-      'publish/approval: Risky changes need the reviewed or approver tier: moves a page, overwrites a manual edit, archives a page',
+    expect(errors((await run({ tier: 'low-risk' })).findings)).toEqual([
+      'publish/approval: Risky changes need the high-risk or manual tier: moves a page, overwrites a manual edit, archives a page',
     ])
     expect(confluence.writes).toEqual([])
 
@@ -197,7 +197,7 @@ describe('publish', () => {
       'publish/scopes: The token is missing these scopes: delete:folder:confluence',
     ])
     confluence.denied.clear()
-    expect(errors((await run({ tier: 'unreviewed' })).findings)[0]).toContain('new folder')
+    expect(errors((await run({ tier: 'low-risk' })).findings)[0]).toContain('new folder')
     await sync()
 
     const guides = owned('docs/guides/')
@@ -260,8 +260,8 @@ describe('publish', () => {
       for (const item of draft.ops) Reflect.deleteProperty(item, 'risky')
       draft['risk'] = 'low'
     })
-    expect(errors((await run({ tier: 'unreviewed' })).findings)).toEqual([
-      'publish/approval: Risky changes need the reviewed or approver tier: changes a page with deviates-from links',
+    expect(errors((await run({ tier: 'low-risk' })).findings)).toEqual([
+      'publish/approval: Risky changes need the high-risk or manual tier: changes a page with deviates-from links',
     ])
   })
 
@@ -396,32 +396,32 @@ describe('publish', () => {
   it('checks the tier, key and approvers', async () => {
     await planned()
     expect(errors((await run({ tier: 'admin' })).findings)).toEqual([
-      'publish/tier: environment-tier must be one of: unreviewed, reviewed, approver',
+      'publish/tier: environment-tier must be one of: low-risk, high-risk, manual',
     ])
     expect(errors((await run({ ownershipKey: 'short' })).findings)).toEqual([
       'publish/key: ownership-key must be at least 32 characters',
     ])
-    expect(errors((await run({ tier: 'approver' })).findings)).toEqual(['publish/approval: muta is not in approvers'])
+    expect(errors((await run({ tier: 'manual' })).findings)).toEqual(['publish/approval: muta is not in approvers'])
     expect(
-      errors((await run({ tier: 'approver', env: { GITHUB_SHA: 'abc', GITHUB_REF: 'refs/heads/main' } })).findings),
+      errors((await run({ tier: 'manual', env: { GITHUB_SHA: 'abc', GITHUB_REF: 'refs/heads/main' } })).findings),
     ).toEqual(['publish/approval: The user who started this run is not in approvers'])
     await appendFile(join(root, '.docs-sync/config.yaml'), 'approvers: [Muta]\nself-approval: false\n')
-    expect(errors((await run({ tier: 'approver' })).findings)).toEqual([
+    expect(errors((await run({ tier: 'manual' })).findings)).toEqual([
       'publish/approval: change-author is needed when self-approval is false',
     ])
-    expect(errors((await run({ tier: 'approver', author: 'MUTA' })).findings)).toEqual([
+    expect(errors((await run({ tier: 'manual', author: 'MUTA' })).findings)).toEqual([
       'publish/approval: muta cannot approve their own change',
     ])
-    const result = await run({ tier: 'approver', author: 'someone' })
+    const result = await run({ tier: 'manual', author: 'someone' })
     expect(errors(result.findings)).toEqual([])
     expect(result.applied?.create).toBe(9)
   })
 
-  it('needs a reviewed tier for every change when approval is always', async () => {
+  it('needs the high-risk tier for every change when approval is always', async () => {
     await appendFile(join(root, '.docs-sync/config.yaml'), 'approval: always\n')
     await planned()
-    expect(errors((await run({ tier: 'unreviewed' })).findings)).toEqual([
-      'publish/approval: approval: always needs the reviewed or approver tier',
+    expect(errors((await run({ tier: 'low-risk' })).findings)).toEqual([
+      'publish/approval: approval: always needs the high-risk or manual tier',
     ])
     await writeFile(join(root, '.docs-sync/config.yaml'), 'broken: [')
     expect(errors((await run()).findings)).not.toEqual([])

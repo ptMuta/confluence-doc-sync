@@ -40,12 +40,12 @@ Risky changes are new, moved or archived pages, new or deleted folders, overwrit
    - Write: the read scopes plus `write:page:confluence`, `write:attachment:confluence`, `read:content-details:confluence`, `write:label:confluence`, `read:label:confluence` and `read:content.metadata:confluence`. Add `write:folder:confluence` and `delete:folder:confluence` when docs have subfolders.
 4. Create GitHub environments, each limited to `main`:
 
-| Environment             | Secrets                                             | Variables                    |
-| ----------------------- | --------------------------------------------------- | ---------------------------- |
-| `docs-plan`             | `CONFLUENCE_READ_TOKEN`                             | none                         |
-| `docs-publish`          | `CONFLUENCE_WRITE_TOKEN`, `DOCS_SYNC_OWNERSHIP_KEY` | `DOCS_SYNC_TIER: unreviewed` |
-| `docs-publish-reviewed` | same as `docs-publish`, with required reviewers     | `DOCS_SYNC_TIER: reviewed`   |
-| `docs-sync-approve`     | same as `docs-publish`                              | `DOCS_SYNC_TIER: approver`   |
+| Environment                   | Secrets                                                       | Variables                   |
+| ----------------------------- | ------------------------------------------------------------- | --------------------------- |
+| `docs-sync-read`              | `CONFLUENCE_READ_TOKEN`                                       | none                        |
+| `docs-sync-publish-low-risk`  | `CONFLUENCE_WRITE_TOKEN`, `DOCS_SYNC_OWNERSHIP_KEY`           | `DOCS_SYNC_TIER: low-risk`  |
+| `docs-sync-publish-high-risk` | same as `docs-sync-publish-low-risk`, with required reviewers | `DOCS_SYNC_TIER: high-risk` |
+| `docs-sync-publish-manual`    | same as `docs-sync-publish-low-risk`                          | `DOCS_SYNC_TIER: manual`    |
 
 `DOCS_SYNC_OWNERSHIP_KEY` is a random string of at least 32 characters, for example `openssl rand -hex 32`. Use the same key in every publish environment.
 

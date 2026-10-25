@@ -4,4 +4,5 @@ confluence:
   space: GCS
   root-folder: 3866878
 types: [decisions, requirements, security, logging, monitoring, writing-rules]
+approval: none
 approvers: [ptMuta]

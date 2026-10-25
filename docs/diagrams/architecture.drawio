@@ -19,7 +19,7 @@
         <mxCell id="check" value="check: lint and render" style="role=service;icon=git-pull-request;" vertex="1" parent="pr">
           <mxGeometry x="20" y="35" width="180" height="55" as="geometry" />
         </mxCell>
-        <mxCell id="planzone" value="docs-plan: read token" style="role=boundary;" vertex="1" parent="github">
+        <mxCell id="planzone" value="docs-sync-read: read token" style="role=boundary;" vertex="1" parent="github">
           <mxGeometry x="200" y="195" width="410" height="120" as="geometry" />
         </mxCell>
         <mxCell id="plan" value="plan: compare with Confluence" style="role=service;icon=list-check;" vertex="1" parent="planzone">
@@ -28,7 +28,7 @@
         <mxCell id="bundle" value="Plan bundle and hash" style="role=queue;icon=package;" vertex="1" parent="planzone">
           <mxGeometry x="240" y="42" width="150" height="50" as="geometry" />
         </mxCell>
-        <mxCell id="pubzone" value="docs-publish: write token and ownership key" style="role=boundary;" vertex="1" parent="github">
+        <mxCell id="pubzone" value="docs-sync-publish-low-risk: write token and ownership key" style="role=boundary;" vertex="1" parent="github">
           <mxGeometry x="200" y="355" width="410" height="125" as="geometry" />
         </mxCell>
         <mxCell id="checks" value="Checks hash, commit, config, visibility and signed ownership" style="role=note;" vertex="1" parent="pubzone">

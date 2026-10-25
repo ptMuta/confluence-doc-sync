@@ -23,7 +23,7 @@ The same workflow runs every night at 03:17 UTC. If main changed since the last 
 
 ## Dogfooding
 
-This repository syncs its own docs to the Documentation folder in GCS. Pull requests check the docs with the action built from source. Pushes to main plan and publish with the latest nightly release, so the docs go out through the published action and image.
+This repository syncs its own docs to the Documentation folder in GCS. Pull requests check the docs with the action built from source. Pushes to main plan and publish with the latest nightly release, so the docs go out through the published action and image. It sets approval: none, so every change publishes through docs-sync-publish-low-risk without waiting.
 
 ## Dependency updates
 
@@ -44,14 +44,14 @@ Keep DOCS_SYNC_OWNERSHIP_KEY the same in every publish environment. Rotation is 
 
 ## Failed publish
 
-| Message                                          | Cause                                                       | Fix                                                              |
-| ------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| Risky changes need the reviewed or approver tier | New, moved or archived pages, or a manual edit to overwrite | Approve through the reviewed environment or the approve workflow |
-| was edited in Confluence after the plan          | Someone edited a page between plan and publish              | Re-run the plan                                                  |
-| has no valid ownership signature                 | The page was not created by this tool, or the key changed   | Check the key; move the page out from under the root             |
-| The bundle does not match expected-bundle-sha256 | The bundle differs from the planned one                     | Start publish from the plan run's own outputs                    |
-| Who can view the root changed since the plan     | Permissions changed between plan and publish                | Check the change, then plan again                                |
-| The token is missing these scopes                | The token lacks a scope                                     | Add the scopes named in the message                              |
+| Message                                          | Cause                                                       | Fix                                                               |
+| ------------------------------------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------- |
+| Risky changes need the high-risk or manual tier  | New, moved or archived pages, or a manual edit to overwrite | Approve through the high-risk environment or the approve workflow |
+| was edited in Confluence after the plan          | Someone edited a page between plan and publish              | Re-run the plan                                                   |
+| has no valid ownership signature                 | The page was not created by this tool, or the key changed   | Check the key; move the page out from under the root              |
+| The bundle does not match expected-bundle-sha256 | The bundle differs from the planned one                     | Start publish from the plan run's own outputs                     |
+| Who can view the root changed since the plan     | Permissions changed between plan and publish                | Check the change, then plan again                                 |
+| The token is missing these scopes                | The token lacks a scope                                     | Add the scopes named in the message                               |
 
 ## Live test
 
