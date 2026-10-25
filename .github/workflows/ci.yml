@@ -105,12 +105,13 @@ jobs:
       - name: Smoke test
         run: |
           sample() { docker run --rm -v "$PWD/test/fixtures/$1:/github/workspace:ro" -w /github/workspace "${@:2}" docs-sync:ci; }
+          quiet() { "$@" | sed 's/^::/  /'; }
           sample good -e INPUT_MODE=check
-          if sample bad -e INPUT_MODE=check; then
+          if quiet sample bad -e INPUT_MODE=check; then
             echo "check mode passed the bad sample repo"
             exit 1
           fi
-          if sample good -e INPUT_MODE=check -e INPUT_CONFLUENCE-CLIENT-SECRET=dummy; then
+          if quiet sample good -e INPUT_MODE=check -e INPUT_CONFLUENCE-CLIENT-SECRET=dummy; then
             echo "check mode accepted a credential"
             exit 1
           fi
