@@ -62,8 +62,19 @@ Required reviewers work only in public repos or on GitHub Enterprise. Elsewhere,
 
 Plan writes `docs-sync.lock` with the resolved external decisions. Commit it next to the config so a changed resolution shows up in review.
 
+## Verify a release
+
+Pin the action to a release tag's commit. That commit's `action.yml` pins the image digest.
+
+```sh
+gh release verify v1.0.0 -R ptMuta/git-confluence-sync
+gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -R ptMuta/git-confluence-sync
+```
+
 ## Development
 
 Node 24. `npm ci --ignore-scripts`, then `npm run verify` runs type checks, lint, formatting, tests with coverage, Knip and the build.
+
+To release, run the `release` workflow on `main` with a version such as `v1.0.0`. It needs a `release` environment limited to `main`, and immutable releases turned on in the repo settings.
 
 Copyright © 2026 ptMuta. All rights reserved. Proprietary; no license is granted.
