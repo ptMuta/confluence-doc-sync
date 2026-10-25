@@ -9,4 +9,4 @@ rules:
   unpinned-uses:
     config:
       policies:
-        ptMuta/git-confluence-sync: ref-pin
+        ptMuta/confluence-doc-sync: ref-pin

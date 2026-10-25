@@ -1,4 +1,4 @@
-name: git-confluence-sync
+name: confluence-doc-sync
 description: Check structured repository docs and publish them to Confluence Cloud.
 inputs:
   mode:

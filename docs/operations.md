@@ -13,13 +13,13 @@ Run the release workflow on main with a version such as v1.0.0, or v1.0.0-rc.1 f
 Verify a release:
 
 ```sh
-gh release verify v1.0.0 -R ptMuta/git-confluence-sync
-gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -R ptMuta/git-confluence-sync
+gh release verify v1.0.0 -R ptMuta/confluence-doc-sync
+gh attestation verify oci://ghcr.io/ptmuta/confluence-doc-sync@sha256:<digest> -R ptMuta/confluence-doc-sync
 ```
 
 ## Nightly and cleanup
 
-The same workflow runs every night at 03:17 UTC. If main changed since the last nightly, it publishes nightly-YYYYMMDD in the nightly environment, which has no reviewers, and moves the nightly image tag and git tag. Run the workflow with version nightly to publish one by hand. A cleanup job then deletes older nightlies and release candidates whose final version exists, with their images. Final releases stay until deleted by hand.
+The same workflow runs every night at 03:17 UTC. If main has changes beyond docs since the last nightly, it publishes nightly-YYYYMMDD in the nightly environment, which has no reviewers, and moves the nightly image tag and git tag. Run the workflow with version nightly to publish one by hand. A cleanup job then deletes older nightlies and release candidates whose final version exists, with their images. Final releases stay until deleted by hand.
 
 ## Dogfooding
 

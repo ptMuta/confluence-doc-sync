@@ -24,5 +24,5 @@ RUN sed -i -e "s#http://deb.debian.org/debian-security#http://snapshot.debian.or
  && rm -rf /usr/local/lib/node_modules /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /opt/yarn-* \
  && useradd --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin render
 COPY --from=build /src/dist/main.mjs /app/main.mjs
-LABEL org.opencontainers.image.source="https://github.com/ptMuta/git-confluence-sync"
+LABEL org.opencontainers.image.source="https://github.com/ptMuta/confluence-doc-sync"
 ENTRYPOINT ["node", "/app/main.mjs"]

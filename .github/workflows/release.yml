@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  IMAGE: ghcr.io/ptmuta/git-confluence-sync
+  IMAGE: ghcr.io/ptmuta/confluence-doc-sync
 
 jobs:
   version:
@@ -39,9 +39,13 @@ jobs:
           if [[ "$EVENT" == schedule || "$INPUT" == nightly ]]; then
             version="nightly-$(date -u +%Y%m%d)"
             last=$(gh release list -R "$GITHUB_REPOSITORY" --json tagName -q '[.[].tagName | select(startswith("nightly-"))][0] // ""')
-            if [[ -n "$last" && "$(gh api "repos/$GITHUB_REPOSITORY/commits/$last" -q '.parents[0].sha')" == "$GITHUB_SHA" ]]; then
-              echo "main has not changed since $last"
-              echo "skip=true" >> "$GITHUB_OUTPUT"
+            if [[ -n "$last" ]]; then
+              base=$(gh api "repos/$GITHUB_REPOSITORY/commits/$last" -q '.parents[0].sha')
+              files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$base...$GITHUB_SHA" -q '.files[].filename')
+              if ! printf '%s' "$files" | grep -qvE '^(docs/|\.docs-sync/|docs-sync\.lock$|[^/]+\.md$)'; then
+                echo "main has no code changes since $last"
+                echo "skip=true" >> "$GITHUB_OUTPUT"
+              fi
             fi
           else
             version="$INPUT"
@@ -122,7 +126,7 @@ jobs:
     env:
       VERSION: ${{ needs.version.outputs.version }}
       GH_TOKEN: ${{ github.token }}
-      PACKAGE: users/${{ github.repository_owner }}/packages/container/git-confluence-sync/versions
+      PACKAGE: users/${{ github.repository_owner }}/packages/container/confluence-doc-sync/versions
     steps:
       - run: |
           tags=$(gh release list -R "$GITHUB_REPOSITORY" -L 1000 --json tagName -q '.[].tagName')
