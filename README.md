@@ -76,7 +76,7 @@ gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -
 
 Node 26. `npm ci --ignore-scripts`, then `npm run verify` runs type checks, lint, formatting, tests with coverage, Knip and the build.
 
-To release, run the `release` workflow on `main` with a version such as `v1.0.0`, or `v1.0.0-rc.1` for a pre-release. It needs a `release` environment limited to `main`, and immutable releases turned on in the repo settings.
+To release, run the `release` workflow on `main` with a version such as `v1.0.0`, or `v1.0.0-rc.1` for a pre-release, or `nightly`. It needs a `release` environment limited to `main`, and immutable releases turned on in the repo settings.
 
 The same workflow publishes a rolling nightly pre-release every night when `main` has changed, through a `nightly` environment without reviewers. Immutable tags can't be reused, so each nightly is tagged `nightly-YYYYMMDD` and replaces the previous one; the image is also tagged `nightly`. Release candidates are deleted with their images once their final version is out. Final releases are kept until deleted by hand.
 

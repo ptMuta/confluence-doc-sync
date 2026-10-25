@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version tag, for example v1.0.0 or v1.0.0-rc.1
+        description: Version tag such as v1.0.0 or v1.0.0-rc.1, or nightly
         required: true
   schedule:
     - cron: '17 3 * * *'
@@ -36,7 +36,7 @@ jobs:
           INPUT: ${{ inputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [[ "$EVENT" == schedule ]]; then
+          if [[ "$EVENT" == schedule || "$INPUT" == nightly ]]; then
             version="nightly-$(date -u +%Y%m%d)"
             last=$(gh release list -R "$GITHUB_REPOSITORY" --json tagName -q '[.[].tagName | select(startswith("nightly-"))][0] // ""')
             if [[ -n "$last" && "$(gh api "repos/$GITHUB_REPOSITORY/commits/$last" -q '.parents[0].sha')" == "$GITHUB_SHA" ]]; then
@@ -58,7 +58,7 @@ jobs:
     if: needs.version.outputs.skip != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    environment: ${{ github.event_name == 'schedule' && 'nightly' || 'release' }}
+    environment: ${{ startsWith(needs.version.outputs.version, 'nightly-') && 'nightly' || 'release' }}
     permissions:
       contents: write # push the release tag and create the release
       packages: write # push the image to GHCR
@@ -107,6 +107,9 @@ jobs:
           git push "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/tags/$VERSION"
           kind=$([[ "$VERSION" =~ ^v[0-9.]+$ ]] && echo --latest || echo --prerelease)
           gh release create "$VERSION" "$kind" --verify-tag --generate-notes --title "$VERSION" --notes "Image: \`$IMAGE@$DIGEST\`"
+          if [[ "$VERSION" == nightly-* ]]; then
+            git push --force "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" "HEAD:refs/tags/nightly"
+          fi
 
   cleanup:
     name: Clean up pre-releases

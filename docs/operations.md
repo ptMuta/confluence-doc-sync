@@ -19,7 +19,11 @@ gh attestation verify oci://ghcr.io/ptmuta/git-confluence-sync@sha256:<digest> -
 
 ## Nightly and cleanup
 
-The same workflow runs every night at 03:17 UTC. If main changed since the last nightly, it publishes nightly-YYYYMMDD in the nightly environment, which has no reviewers, and moves the nightly image tag. A cleanup job then deletes older nightlies and release candidates whose final version exists, with their images. Final releases stay until deleted by hand.
+The same workflow runs every night at 03:17 UTC. If main changed since the last nightly, it publishes nightly-YYYYMMDD in the nightly environment, which has no reviewers, and moves the nightly image tag and git tag. Run the workflow with version nightly to publish one by hand. A cleanup job then deletes older nightlies and release candidates whose final version exists, with their images. Final releases stay until deleted by hand.
+
+## Dogfooding
+
+This repository syncs its own docs to the Documentation folder in GCS. Pull requests check the docs with the action built from source. Pushes to main plan and publish with the latest nightly release, so the docs go out through the published action and image.
 
 ## Dependency updates
 

@@ -50,7 +50,7 @@ jobs:
         with:
           persist-credentials: false
       - id: plan
-        uses: ./
+        uses: ptMuta/git-confluence-sync@nightly
         with:
           mode: plan
           confluence-token: ${{ secrets.CONFLUENCE_READ_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           REPO: ${{ github.repository }}
         run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
-      - uses: ./
+      - uses: ptMuta/git-confluence-sync@nightly
         with:
           mode: publish
           confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}

@@ -6,3 +6,7 @@ rules:
   self-repository:
     ignore:
       - docs-sync.yml
+  unpinned-uses:
+    config:
+      policies:
+        ptMuta/git-confluence-sync: ref-pin
