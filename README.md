@@ -18,14 +18,14 @@ Every Markdown file under `docs` becomes a page. Front matter is optional: the t
 
 Types are opt-in with `types`:
 
-| Type           | Adds                                                                 |
-| -------------- | -------------------------------------------------------------------- |
-| `decisions`    | Decision records in `decisions.folder`, with an index page           |
-| `requirements` | Requirements catalog page                                            |
-| `security`     | Security controls catalog page                                       |
-| `logging`      | Logging catalog page                                                 |
-| `monitoring`   | Monitoring use cases catalog page                                    |
-| `style`        | Length budgets, filler, placeholders, empty sections, duplicate text |
+| Type            | Adds                                                                 |
+| --------------- | -------------------------------------------------------------------- |
+| `decisions`     | Decision records in `decisions.folder`, with an index page           |
+| `requirements`  | Requirements catalog page                                            |
+| `security`      | Security controls catalog page                                       |
+| `logging`       | Logging catalog page                                                 |
+| `monitoring`    | Monitoring use cases catalog page                                    |
+| `writing-rules` | Length budgets, filler, placeholders, empty sections, duplicate text |
 
 Safety checks always run: broken links and ids, leaked secrets and diagram problems.
 

@@ -13,4 +13,4 @@ reference-sources:
     id-pattern: 'ADR-\d{3,4}'
     lifecycle:
       superseded: { folder: Superseded }
-types: [decisions, requirements, security, logging, monitoring, style]
+types: [decisions, requirements, security, logging, monitoring, writing-rules]

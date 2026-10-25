@@ -9,7 +9,7 @@ const config = '.docs-sync/config.yaml'
 
 const base = `system: Payments
 confluence: { site: example.atlassian.net, space: DOCS, root-page: 1 }
-types: [decisions, requirements, security, logging, monitoring, style]
+types: [decisions, requirements, security, logging, monitoring, writing-rules]
 `
 
 async function repo(files: Record<string, string>): Promise<string> {
@@ -138,7 +138,7 @@ describe('check', () => {
       'docs/a.md': '---\ntitle: A\n---\n\n## Empty\n',
     }
     expect(await rules(files)).toEqual([])
-    expect(await rules({ ...files, [config]: `${plain}types: [style]\n` })).toEqual(['content/empty-section'])
+    expect(await rules({ ...files, [config]: `${plain}types: [writing-rules]\n` })).toEqual(['content/empty-section'])
     expect(await rules({ ...files, [config]: `${plain}types: [logging]\n` })).toEqual(['schema'])
     expect(await rules({ ...files, [config]: `${plain}types: [decisions]\n` })).toEqual(['frontmatter'])
   })

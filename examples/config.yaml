@@ -3,7 +3,7 @@ confluence:
   site: example.atlassian.net
   space: DOCS
   root-page: 123456
-types: [decisions, requirements, security, logging, monitoring, style]
+types: [decisions, requirements, security, logging, monitoring, writing-rules]
 approval: on-risk
 approvers: [your-github-login]
 tags:

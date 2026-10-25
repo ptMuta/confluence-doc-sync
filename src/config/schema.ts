@@ -70,7 +70,9 @@ export const configSchema = z.strictObject({
   theme: z.union([z.enum(themeNames), repoPath]).default('nord'),
   'diagram-max-mb': z.number().int().positive().max(1000).default(50),
   docs: repoPath.default('docs'),
-  types: z.array(z.enum(['decisions', 'requirements', 'security', 'logging', 'monitoring', 'style'])).default([]),
+  types: z
+    .array(z.enum(['decisions', 'requirements', 'security', 'logging', 'monitoring', 'writing-rules']))
+    .default([]),
   decisions: z
     .strictObject({
       label: z.string().trim().min(1).default('Decision'),
