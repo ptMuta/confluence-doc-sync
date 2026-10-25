@@ -187,3 +187,7 @@ jobs:
     uses: ./.github/workflows/docs-sync.yml
     with:
       image: ${{ needs.edge.result == 'success' && needs.edge.outputs.image || '' }}
+    secrets:
+      CONFLUENCE_READ_CLIENT_SECRET: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
+      CONFLUENCE_WRITE_CLIENT_SECRET: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
+      DOCS_SYNC_OWNERSHIP_KEY: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
