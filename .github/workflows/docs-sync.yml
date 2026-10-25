@@ -53,7 +53,7 @@ jobs:
         uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
         with:
           mode: plan
-          confluence-client-id: ${{ secrets.CONFLUENCE_READ_CLIENT_ID }}
+          confluence-client-id: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
           confluence-client-secret: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -84,7 +84,7 @@ jobs:
       - uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
         with:
           mode: publish
-          confluence-client-id: ${{ secrets.CONFLUENCE_WRITE_CLIENT_ID }}
+          confluence-client-id: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}
           confluence-client-secret: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
           bundle-path: docs-sync-plan
           expected-bundle-sha256: ${{ needs.plan.outputs.bundle-sha256 }}
