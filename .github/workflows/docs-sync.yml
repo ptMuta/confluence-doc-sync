@@ -74,8 +74,8 @@ jobs:
         env:
           IMAGE_REF: ${{ steps.image.outputs.image }}
           INPUT_MODE: plan
-          INPUT_CONFLUENCE-CLIENT-ID: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
-          INPUT_CONFLUENCE-CLIENT-SECRET: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
+          INPUT_CONFLUENCE_CLIENT_ID: ${{ vars.CONFLUENCE_READ_CLIENT_ID }}
+          INPUT_CONFLUENCE_CLIENT_SECRET: ${{ secrets.CONFLUENCE_READ_CLIENT_SECRET }}
         run: bash .github/run-image.sh
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -117,10 +117,10 @@ jobs:
         env:
           IMAGE_REF: ${{ needs.plan.outputs.image }}
           INPUT_MODE: publish
-          INPUT_CONFLUENCE-CLIENT-ID: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}
-          INPUT_CONFLUENCE-CLIENT-SECRET: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
-          INPUT_BUNDLE-PATH: docs-sync-plan
-          INPUT_EXPECTED-BUNDLE-SHA256: ${{ needs.plan.outputs.bundle-sha256 }}
-          INPUT_ENVIRONMENT-TIER: ${{ vars.DOCS_SYNC_TIER }}
-          INPUT_OWNERSHIP-KEY: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
+          INPUT_CONFLUENCE_CLIENT_ID: ${{ vars.CONFLUENCE_WRITE_CLIENT_ID }}
+          INPUT_CONFLUENCE_CLIENT_SECRET: ${{ secrets.CONFLUENCE_WRITE_CLIENT_SECRET }}
+          INPUT_BUNDLE_PATH: docs-sync-plan
+          INPUT_EXPECTED_BUNDLE_SHA256: ${{ needs.plan.outputs.bundle-sha256 }}
+          INPUT_ENVIRONMENT_TIER: ${{ vars.DOCS_SYNC_TIER }}
+          INPUT_OWNERSHIP_KEY: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}
         run: bash .github/run-image.sh
