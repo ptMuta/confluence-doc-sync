@@ -1,4 +1,4 @@
-import type { Config } from '../config/schema.ts'
+import { rootOf, type Config } from '../config/schema.ts'
 import type { Item, Reader, Space } from '../confluence/reader.ts'
 import { error, type Finding } from '../findings.ts'
 
@@ -19,12 +19,12 @@ export interface Visibility {
 
 const isContent = (type: string | undefined): type is Item['type'] => type === 'page' || type === 'folder'
 
-async function chain(reader: Reader, rootId: string): Promise<Level[]> {
+async function chain(reader: Reader, root: { type: Item['type']; id: string }): Promise<Level[]> {
   const levels: Level[] = []
-  let next: { type: Item['type']; id: string } | undefined = { type: 'page', id: rootId }
+  let next: { type: Item['type']; id: string } | undefined = root
   while (next && levels.length < maxDepth) {
     const item = await reader.item(next.type, next.id)
-    if (!item) throw new Error(`Cannot read ${next.type} ${next.id} above the root page`)
+    if (!item) throw new Error(`Cannot read ${next.type} ${next.id} above the root`)
     const readers = (await reader.permissions(item.type, item.id))
       .filter(permission => permission.operation === 'read')
       .map(permission => `${permission.principalType.toLowerCase()}:${permission.principalId}`)
@@ -40,7 +40,7 @@ export async function checkVisibility(
   space: Space,
   configFile: string,
 ): Promise<{ visibility: Visibility; findings: Finding[] }> {
-  const { visibility: mode, readers, 'root-page': root } = config.confluence
+  const { visibility: mode, readers } = config.confluence
   const assignments = await reader.roleAssignments(space.id)
   const openTo = [
     ...new Set(
@@ -49,7 +49,7 @@ export async function checkVisibility(
         .map(a => a.principalId),
     ),
   ].sort()
-  const levels = await chain(reader, root)
+  const levels = await chain(reader, rootOf(config))
   const findings: Finding[] = []
   const fail = (rule: string, message: string) => findings.push(error(rule, configFile, 1, message))
   if (mode !== 'public' && openTo.length)
@@ -59,7 +59,7 @@ export async function checkVisibility(
     )
   const nearest = levels.find(level => level.readers.length)
   if (mode === 'restricted' && !nearest)
-    fail('visibility/restricted', 'Neither the root page nor any page or folder above it restricts who can view it')
+    fail('visibility/restricted', 'Neither the root nor any page or folder above it restricts who can view it')
   if (readers && nearest) {
     const groups = await Promise.all(
       nearest.readers

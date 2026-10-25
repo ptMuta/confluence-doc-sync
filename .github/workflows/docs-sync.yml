@@ -1,0 +1,90 @@
+name: docs-sync
+
+on:
+  pull_request:
+    paths: &docs
+      - .docs-sync/**
+      - docs/**
+      - docs-sync.lock
+      - .github/workflows/docs-sync.yml
+  push:
+    branches: [main]
+    paths: *docs
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.event_name == 'push' && 'docs-sync-publish' || format('docs-sync-{0}', github.ref) }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check docs
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./
+        with:
+          mode: check
+
+  plan:
+    name: Plan
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: docs-plan
+    permissions:
+      contents: read
+    outputs:
+      bundle-sha256: ${{ steps.plan.outputs.bundle-sha256 }}
+      has-changes: ${{ steps.plan.outputs.has-changes }}
+      risk: ${{ steps.plan.outputs.risk }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: plan
+        uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+        with:
+          mode: plan
+          confluence-token: ${{ secrets.CONFLUENCE_READ_TOKEN }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: docs-sync-plan
+          path: docs-sync-plan
+          retention-days: 7
+
+  publish:
+    name: Publish
+    needs: plan
+    if: needs.plan.outputs.has-changes == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: ${{ needs.plan.outputs.risk == 'low' && 'docs-publish' || 'docs-publish-reviewed' }}
+    permissions:
+      contents: read
+      actions: read # download the plan artifact
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: gh run download "$RUN_ID" --repo "$REPO" --name docs-sync-plan --dir docs-sync-plan
+      - uses: ptMuta/git-confluence-sync@nightly # nosemgrep: yaml.github-actions.security.github-actions-mutable-action-tag.github-actions-mutable-action-tag
+        with:
+          mode: publish
+          confluence-token: ${{ secrets.CONFLUENCE_WRITE_TOKEN }}
+          bundle-path: docs-sync-plan
+          expected-bundle-sha256: ${{ needs.plan.outputs.bundle-sha256 }}
+          environment-tier: ${{ vars.DOCS_SYNC_TIER }}
+          ownership-key: ${{ secrets.DOCS_SYNC_OWNERSHIP_KEY }}

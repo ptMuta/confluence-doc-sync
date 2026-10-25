@@ -39,9 +39,9 @@ interface Attachment {
 export interface Reader {
   readonly space: (key: string) => Promise<Space | undefined>
   readonly item: (type: Item['type'], id: string) => Promise<Item | undefined>
-  readonly descendants: (id: string) => Promise<Node[]>
+  readonly descendants: (type: Item['type'], id: string) => Promise<Node[]>
   readonly children: (folderId: string) => Promise<Node[]>
-  readonly property: (pageId: string, key: string) => Promise<unknown>
+  readonly property: (type: Item['type'], id: string, key: string) => Promise<unknown>
   readonly labels: (pageId: string) => Promise<string[]>
   readonly attachments: (pageId: string) => Promise<Attachment[]>
   readonly permissions: (type: Item['type'], id: string) => Promise<Permission[]>
@@ -98,10 +98,10 @@ export function cloudReader(http: Http): Reader {
         ...(raw.version ? { version: raw.version.number } : {}),
       }
     },
-    descendants: id => http.pages<Node>(`/api/v2/pages/${q(id)}/descendants?depth=10&limit=250`),
+    descendants: (type, id) => http.pages<Node>(`/api/v2/${type}s/${q(id)}/descendants?depth=10&limit=250`),
     children: id => http.pages<Node>(`/api/v2/folders/${q(id)}/direct-children?limit=250`),
-    property: async (pageId, key) =>
-      (await http.get<{ results: { value: unknown }[] }>(`/api/v2/pages/${q(pageId)}/properties?key=${q(key)}`))
+    property: async (type, id, key) =>
+      (await http.get<{ results: { value: unknown }[] }>(`/api/v2/${type}s/${q(id)}/properties?key=${q(key)}`))
         .results[0]?.value,
     labels: async pageId =>
       (await http.pages<{ name: string }>(`/api/v2/pages/${q(pageId)}/labels?limit=250`)).map(label => label.name),

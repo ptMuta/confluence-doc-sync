@@ -1,4 +1,4 @@
-import { basename } from 'node:path'
+import { basename, posix } from 'node:path'
 import type { Config } from '../config/schema.ts'
 import { parseDrawio } from '../diagrams/parse.ts'
 import { prepare } from '../diagrams/prepare.ts'
@@ -6,7 +6,8 @@ import type { Renderer } from '../diagrams/render/drawio.ts'
 import type { Theme } from '../diagrams/theme.ts'
 import { error, type Finding } from '../findings.ts'
 import type { Node, Resolver } from '../render/adf.ts'
-import { renderPages } from '../render/pages.ts'
+import { humanize } from '../model/text.ts'
+import { folderOf, renderPages } from '../render/pages.ts'
 import type { Resolved } from '../refs/resolve.ts'
 import type { Sources } from '../source/load.ts'
 import { canonical, sha256 } from './hash.ts'
@@ -34,8 +35,15 @@ export interface DesiredPage {
   readonly hash: string
 }
 
+export interface DesiredFolder {
+  readonly key: string
+  readonly title: string
+  readonly parent?: string
+}
+
 export interface Desired {
   readonly pages: readonly DesiredPage[]
+  readonly folders: readonly DesiredFolder[]
   readonly images: ReadonlyMap<string, Image>
   readonly findings: Finding[]
 }
@@ -48,6 +56,19 @@ export interface DesiredInput {
   readonly read: (file: string, maxBytes: number) => Promise<string | undefined>
   readonly resolved: ReadonlyMap<string, Resolved>
   readonly blobUrl?: string
+}
+
+function foldersOf(pages: readonly DesiredPage[], docs: string): DesiredFolder[] {
+  const folders = new Map<string, DesiredFolder>()
+  for (const page of pages) {
+    let key = page.parent?.endsWith('/') ? page.parent : undefined
+    while (key && !folders.has(key)) {
+      const parent = folderOf(key, docs)
+      folders.set(key, { key, title: humanize(posix.basename(key)), ...(parent ? { parent } : {}) })
+      key = parent
+    }
+  }
+  return [...folders.values()].sort((a, b) => a.key.localeCompare(b.key))
 }
 
 const pngSize = (data: Buffer) => ({ width: data.readUInt32BE(16), height: data.readUInt32BE(20) })
@@ -182,6 +203,7 @@ export async function desiredState(input: DesiredInput): Promise<Desired> {
   }
   return {
     pages,
+    folders: foldersOf(pages, config.docs),
     images: byName,
     findings,
   }

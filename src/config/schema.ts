@@ -45,13 +45,18 @@ export const configSchema = z.strictObject({
       site: z.string().regex(/^[a-z0-9][a-z0-9-]*\.atlassian\.net$/, 'Must be a <name>.atlassian.net host'),
       'cloud-id': z.uuid().optional(),
       space,
-      'root-page': z.coerce.string().regex(/^\d+$/, 'Must be a page id'),
+      'root-page': z.coerce.string().regex(/^\d+$/, 'Must be a page id').optional(),
+      'root-folder': z.coerce.string().regex(/^\d+$/, 'Must be a folder id').optional(),
       visibility: z.enum(['space', 'restricted', 'public']).default('space'),
       readers: z.array(z.string().trim().min(1)).min(1).optional(),
     })
     .refine(value => !value.readers || value.visibility === 'restricted', {
       message: 'readers needs visibility: restricted',
       path: ['readers'],
+    })
+    .refine(value => (value['root-page'] === undefined) !== (value['root-folder'] === undefined), {
+      message: 'Set either root-page or root-folder',
+      path: ['root-page'],
     }),
   approval: z.enum(['none', 'always', 'on-risk']).default('on-risk'),
   approvers: z.array(z.string().trim().min(1)).default([]),
@@ -65,6 +70,9 @@ export const configSchema = z.strictObject({
   theme: z.union([z.enum(themeNames), repoPath]).default('nord'),
   'diagram-max-mb': z.number().int().positive().max(1000).default(50),
   docs: repoPath.default('docs'),
+  types: z
+    .array(z.enum(['decisions', 'requirements', 'security', 'logging', 'monitoring', 'writing-rules']))
+    .default([]),
   decisions: z
     .strictObject({
       label: z.string().trim().min(1).default('Decision'),
@@ -105,3 +113,13 @@ export const configSchema = z.strictObject({
 export type Config = z.output<typeof configSchema>
 
 export const vocabularySchema = z.strictObject({ tags: z.array(tag) })
+
+export interface Root {
+  readonly type: 'page' | 'folder'
+  readonly id: string
+}
+
+export const rootOf = (config: Config): Root => {
+  const folder = config.confluence['root-folder']
+  return folder ? { type: 'folder', id: folder } : { type: 'page', id: config.confluence['root-page'] ?? '' }
+}

@@ -1,0 +1,75 @@
+<mxfile>
+  <diagram id="release" name="Release pipeline">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" page="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="maintainer" value="Maintainer" style="role=actor;" vertex="1" parent="1">
+          <mxGeometry x="40" y="114" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="github" value="GitHub" style="role=zone;" vertex="1" parent="1">
+          <mxGeometry x="140" y="40" width="860" height="395" as="geometry" />
+        </mxCell>
+        <mxCell id="schedule" value="Nightly schedule" style="role=service;icon=clock;" vertex="1" parent="github">
+          <mxGeometry x="30" y="230" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="env" value="release or nightly environment" style="role=boundary;" vertex="1" parent="github">
+          <mxGeometry x="230" y="45" width="230" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="build" value="Build and scan image" style="role=service;icon=brand-docker;" vertex="1" parent="env">
+          <mxGeometry x="25" y="45" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="attest" value="Push and attest" style="role=service;icon=certificate;" vertex="1" parent="env">
+          <mxGeometry x="25" y="145" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="tag" value="Pin digest, tag and release" style="role=service;icon=tag;" vertex="1" parent="env">
+          <mxGeometry x="25" y="245" width="180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="registry" value="GHCR image and attestation" style="role=data-store;" vertex="1" parent="github">
+          <mxGeometry x="510" y="175" width="140" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="releases" value="Immutable releases" style="role=data-store;" vertex="1" parent="github">
+          <mxGeometry x="510" y="275" width="140" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="cleanup" value="Clean up pre-releases" style="role=service;icon=trash;" vertex="1" parent="github">
+          <mxGeometry x="690" y="290" width="160" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="policy" value="One nightly at a time. A release candidate stays until its final version ships. Final releases stay." style="role=note;" vertex="1" parent="github">
+          <mxGeometry x="690" y="60" width="150" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="run with a version" style="entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="maintainer" target="build">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="if main changed" style="exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="schedule" target="build">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="171" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="build" target="attest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="attest" target="tag">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="attest" target="registry">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="tag" target="releases">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="delete" style="role=flow-async;" edge="1" parent="1" source="cleanup" target="releases">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="delete" style="role=flow-async;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="cleanup" target="registry">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="910" y="257" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

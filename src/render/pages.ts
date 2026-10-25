@@ -1,3 +1,4 @@
+import { posix } from 'node:path'
 import type { Config } from '../config/schema.ts'
 import type { Decision, Sources } from '../source/load.ts'
 import { catalogKinds, catalogSchemas, linkFields, type CatalogKind } from '../source/schemas.ts'
@@ -30,6 +31,11 @@ const catalogTitles: Record<CatalogKind, string> = {
   security: 'Security controls',
   logging: 'Logging',
   monitoring: 'Monitoring use cases',
+}
+
+export function folderOf(path: string, docs: string): string | undefined {
+  const dir = posix.relative(docs, posix.dirname(path))
+  return dir && !dir.startsWith('..') ? `${posix.join(docs, dir)}/` : undefined
 }
 
 const label = (value: string): string => value.toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
@@ -160,12 +166,16 @@ function catalogPage(kind: CatalogKind, entries: Sources['entries'], config: Con
 
 export function renderPages(config: Config, sources: Sources, resolver: Resolver): RenderedPage[] {
   const links = upstream(sources)
-  const pages: RenderedPage[] = sources.pages.map(page => ({
-    key: page.file,
-    title: page.meta.title,
-    labels: sorted(page.meta.tags ?? []),
-    body: doc(convert(page.blocks, page.file, resolver)),
-  }))
+  const pages: RenderedPage[] = sources.pages.map(page => {
+    const parent = folderOf(page.file, config.docs)
+    return {
+      key: page.file,
+      title: page.meta.title,
+      ...(parent ? { parent } : {}),
+      labels: sorted(page.meta.tags ?? []),
+      body: doc(convert(page.blocks, page.file, resolver)),
+    }
+  })
 
   if (sources.decisions.length) {
     const section = config.decisions.folder

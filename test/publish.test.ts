@@ -1,4 +1,4 @@
-import { appendFile, cp, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { appendFile, cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -168,6 +168,65 @@ describe('publish', () => {
     expect(owned('docs/logging.yaml').parentId).toBe('123456')
     expect(owned('docs/monitoring.yaml').labels).toEqual([])
     expect(confluence.archived).toEqual(new Set(['6000']))
+    expect((await planned()).ops).toEqual([])
+  })
+
+  it('publishes into a root folder', async () => {
+    confluence.add({ id: '800', type: 'folder', title: 'Documentation', parentId: '1', parentType: 'page' })
+    await source('.docs-sync/config.yaml', text => text.replace('root-page: 123456', 'root-folder: 800'))
+    await sync()
+    expect(owned('docs/requirements.yaml').parentId).toBe('800')
+    expect((await planned()).ops).toEqual([])
+    await source('.docs-sync/config.yaml', text => text.replace('root-folder: 800', 'root-page: 123456'))
+    expect(errors((await run()).findings)).toEqual(['publish/config: The plan does not match the config: root'])
+    await source('.docs-sync/config.yaml', text =>
+      text.replace('root-page: 123456', 'root-page: 1\n  root-folder: 800'),
+    )
+    expect(errors((await run()).findings)).toEqual([
+      'schema: confluence.root-page: Set either root-page or root-folder',
+    ])
+  })
+
+  it('publishes subfolders as Confluence folders', async () => {
+    await mkdir(join(root, 'docs/guides/deep'), { recursive: true })
+    await writeFile(join(root, 'docs/guides/setup.md'), '# Setting up\n\nInstall the action.\n')
+    await writeFile(join(root, 'docs/guides/deep/notes.md'), 'Short notes.\n')
+    confluence.denied.add('delete:folder:confluence')
+    await planned()
+    expect(errors((await run()).findings)).toEqual([
+      'publish/scopes: The token is missing these scopes: delete:folder:confluence',
+    ])
+    confluence.denied.clear()
+    expect(errors((await run({ tier: 'unreviewed' })).findings)[0]).toContain('new folder')
+    await sync()
+
+    const guides = owned('docs/guides/')
+    const deep = owned('docs/guides/deep/')
+    expect([guides.type, guides.title, guides.parentId]).toEqual(['folder', 'Guides', '123456'])
+    expect([deep.type, deep.title, deep.parentId]).toEqual(['folder', 'Deep', guides.id])
+    expect([owned('docs/guides/setup.md').title, owned('docs/guides/setup.md').parentId]).toEqual([
+      'Setting up',
+      guides.id,
+    ])
+    expect(JSON.stringify(owned('docs/guides/setup.md').body)).not.toContain('Setting up')
+    expect([owned('docs/guides/deep/notes.md').title, owned('docs/guides/deep/notes.md').parentId]).toEqual([
+      'Notes',
+      deep.id,
+    ])
+    expect((await planned()).ops).toEqual([])
+
+    await rm(join(root, 'docs/guides'), { recursive: true })
+    await planned()
+    await tamper(draft => {
+      const op = draft.ops.find(item => item.op['folder'])
+      if (op) Reflect.deleteProperty(op.op, 'folder')
+    })
+    expect(errors((await run()).findings)).toContainEqual(expect.stringContaining('is a folder'))
+    await planned()
+    const result = await run()
+    expect(errors(result.findings)).toEqual([])
+    expect(result.applied).toEqual({ create: 0, update: 0, move: 0, archive: 4 })
+    expect(confluence.archived).toEqual(new Set([guides.id, deep.id, expect.any(String), expect.any(String)]))
     expect((await planned()).ops).toEqual([])
   })
 
@@ -381,7 +440,7 @@ describe('publish', () => {
     const home = confluence.items.get('123456')
     if (home) home.readers = ['group:g1']
     expect(errors((await run()).findings)).toEqual([
-      'publish/visibility: Who can view the root page changed since the plan; plan again',
+      'publish/visibility: Who can view the root changed since the plan; plan again',
     ])
     confluence.access = [{ principalType: 'ACCESS_CLASS', principalId: 'anonymous-users' }]
     expect(errors((await run()).findings)[0]).toMatch(/^visibility\/space/)
@@ -420,7 +479,7 @@ describe('publish', () => {
     }
     const update = (draft: Draft) => draft.ops[0]?.op ?? {}
     expect(await variant(draft => (update(draft)['page'] = '1'))).toEqual([
-      'publish/op: update docs/overview.md: page 1 does not hold this source under the root page',
+      'publish/op: update docs/overview.md: page 1 does not hold this source under the root',
     ])
     expect(await variant(draft => (update(draft)['title'] = 'Other'))).toEqual([
       'publish/op: update docs/overview.md: the title does not match the page',
@@ -440,7 +499,7 @@ describe('publish', () => {
       }),
     ).toEqual([
       `publish/op: create docs/overview.md: page ${overview.id} already holds this source`,
-      'publish/op: create docs/overview.md: the parent is not the root page or a page this tool owns',
+      'publish/op: create docs/overview.md: the parent is not the root or a page this tool owns',
     ])
     expect(
       await variant(draft =>
@@ -459,7 +518,7 @@ describe('publish', () => {
       ),
     ).toEqual([
       'publish/op: archive docs/overview.md: the plan also writes this page',
-      'publish/op: move docs/logging.yaml: the new parent is not the root page or a page this tool owns',
+      'publish/op: move docs/logging.yaml: the new parent is not the root or a page this tool owns',
     ])
     expect(confluence.writes).toEqual([])
   })

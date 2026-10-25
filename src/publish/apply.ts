@@ -53,8 +53,8 @@ export async function apply(input: ApplyInput): Promise<void> {
   const { reader, writer, bundle, ops, owned, key, site, space } = input
   const ids = new Map(owned.map(page => [page.key, page.id]))
   const parentId = (parent: Parent) => ('page' in parent ? parent.page : ids.get(parent.key))
-  const sign = (page: string, source: string, hash: string, version: number) =>
-    writer.setProperty(page, markerKey, signedMarker(key, { page, source, hash, version }))
+  const sign = (page: string, source: string, hash: string, version: number, type: Owned['type'] = 'page') =>
+    writer.setProperty(type, page, markerKey, signedMarker(key, { page, source, hash, version }))
   const version = async (page: string) => (await reader.item('page', page))?.version ?? 0
 
   let pending = ops.flatMap(({ op }) => (op.kind === 'create' ? [op] : []))
@@ -64,6 +64,12 @@ export async function apply(input: ApplyInput): Promise<void> {
       const parent = parentId(op.parent)
       if (parent === undefined) {
         waiting.push(op)
+        continue
+      }
+      if (op.folder) {
+        const id = await writer.createFolder(space.id, parent, op.title)
+        ids.set(op.key, id)
+        await sign(id, op.key, '', 0, 'folder')
         continue
       }
       const created = await writer.createPage(space.id, parent, op.title)
@@ -111,6 +117,9 @@ export async function apply(input: ApplyInput): Promise<void> {
     await sign(id, page.key, page.hash, next)
   }
 
-  const archived = ops.flatMap(({ op }) => (op.kind === 'archive' ? [op.page] : []))
+  const archives = ops.flatMap(({ op }) => (op.kind === 'archive' ? [op] : []))
+  const archived = archives.filter(op => !op.folder).map(op => op.page)
   if (archived.length) await writer.archive(archived)
+  for (const op of archives.filter(item => item.folder).sort((a, b) => b.key.localeCompare(a.key)))
+    await writer.deleteFolder(op.page)
 }

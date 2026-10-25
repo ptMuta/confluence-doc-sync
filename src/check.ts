@@ -15,7 +15,8 @@ import { exists, readText } from './source/files.ts'
 import { loadSources, type Sources } from './source/load.ts'
 import { isFinding, parseYaml, validate } from './source/yaml.ts'
 
-const rules: readonly Rule[] = [ids, refs, decisions, content, duplicates, secrets, links, usage, diagrams]
+const rules: readonly Rule[] = [ids, refs, decisions, secrets, links, usage, diagrams]
+const writing: readonly Rule[] = [content, duplicates]
 
 async function loadTheme(root: string, file: string): Promise<{ theme?: Theme; findings: Finding[] }> {
   if (file in themes) return { theme: themes[file as keyof typeof themes], findings: [] }
@@ -69,7 +70,8 @@ export async function analyze(root: string, configFile: string, render?: Rendere
     theme: themed.theme,
     render,
   }
-  const results = await Promise.all(rules.map(async rule => rule(context)))
+  const active = config.types.includes('writing-rules') ? [...rules, ...writing] : rules
+  const results = await Promise.all(active.map(async rule => rule(context)))
   return {
     findings: [...setup, ...results.flat()].sort(
       (a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.rule.localeCompare(b.rule),

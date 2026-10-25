@@ -1,0 +1,69 @@
+- id: FR-001
+  statement: When a pull request changes docs, the action shall lint them and render every diagram without a Confluence token.
+  priority: must
+  verification: test/check.test.ts
+- id: FR-002
+  statement: When main changes, the action shall compare the docs with Confluence and write a hashed plan bundle.
+  priority: must
+  verification: test/plan.test.ts
+- id: FR-003
+  statement: When given a plan bundle and its hash, the action shall apply exactly the planned changes.
+  priority: must
+  verification: test/publish.test.ts
+- id: FR-004
+  statement: If a synced page was edited in Confluence, then the plan shall report the edit as a risky overwrite.
+  priority: must
+  verification: test/plan.test.ts
+- id: FR-005
+  statement: When a source file is removed, the action shall archive its page.
+  priority: must
+  verification: test/publish.test.ts
+- id: FR-006
+  statement: When a doc references an external decision, the plan shall resolve it to one page and record it in the lock file.
+  priority: must
+  verification: test/plan.test.ts
+- id: FR-007
+  statement: Where diagram-output is macro, the action shall publish diagrams as draw.io app macros.
+  priority: should
+  verification: test/publish.test.ts
+- id: FR-008
+  statement: The action shall render diagrams in the configured theme with Tabler icons.
+  priority: must
+  verification: test/diagrams.test.ts
+- id: FR-009
+  statement: Where root-folder is set, the action shall publish pages into that folder.
+  priority: should
+  verification: test/publish.test.ts
+- id: NFR-SEC-001
+  statement: The action shall refuse a Confluence token in check mode.
+  priority: must
+  verification: .github/workflows/ci.yml
+  rationale: Pull request code must never see a secret.
+- id: NFR-SEC-002
+  statement: The action shall change only pages under the root that carry a valid ownership signature.
+  priority: must
+  verification: test/publish.test.ts
+- id: NFR-SEC-003
+  statement: If a plan bundle fails its hash, file set, schema or ADF allowlist check, then publish shall stop before any write.
+  priority: must
+  verification: test/publish.test.ts
+- id: NFR-SEC-004
+  statement: If the root is visible to more people than the config allows, then plan and publish shall stop.
+  priority: must
+  verification: test/plan.test.ts
+- id: NFR-SEC-005
+  statement: Each release shall carry a provenance attestation for its image and an immutable GitHub release.
+  priority: must
+  verification: .github/workflows/release.yml
+- id: NFR-REL-001
+  statement: When nothing changed since the last publish, the plan shall contain no changes.
+  priority: must
+  verification: test/live/confluence.mjs
+- id: NFR-REL-002
+  statement: Rendering the same diagram twice shall produce the same PNG.
+  priority: must
+  verification: .github/workflows/ci.yml
+- id: NFR-QUA-001
+  statement: Unit tests shall cover at least 90 percent of lines and branches.
+  priority: must
+  verification: vitest.config.ts

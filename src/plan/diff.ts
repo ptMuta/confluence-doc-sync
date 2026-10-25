@@ -1,12 +1,18 @@
 import type { Config } from '../config/schema.ts'
 import { error, warning, type Finding } from '../findings.ts'
-import type { DesiredPage } from './desired.ts'
+import type { DesiredFolder, DesiredPage } from './desired.ts'
 import type { Owned } from './state.ts'
 
 type Parent = { readonly page: string } | { readonly key: string }
 
 export type Op =
-  | { readonly kind: 'create'; readonly key: string; readonly title: string; readonly parent: Parent }
+  | {
+      readonly kind: 'create'
+      readonly key: string
+      readonly title: string
+      readonly parent: Parent
+      readonly folder?: true | undefined
+    }
   | {
       readonly kind: 'update'
       readonly key: string
@@ -15,7 +21,13 @@ export type Op =
       readonly changes: readonly ('content' | 'title' | 'manual-edit')[]
     }
   | { readonly kind: 'move'; readonly key: string; readonly page: string; readonly from: string; readonly to: Parent }
-  | { readonly kind: 'archive'; readonly key: string; readonly page: string; readonly title: string }
+  | {
+      readonly kind: 'archive'
+      readonly key: string
+      readonly page: string
+      readonly title: string
+      readonly folder?: true | undefined
+    }
 
 export type Risk = 'low' | 'high'
 
@@ -26,17 +38,21 @@ export interface Classified {
 
 export function diff(
   desired: readonly DesiredPage[],
+  folders: readonly DesiredFolder[],
   owned: readonly Owned[],
   root: string,
 ): { ops: Op[]; findings: Finding[] } {
   const byKey = new Map(owned.map(page => [page.key, page]))
-  const parentOf = (page: DesiredPage): Parent => {
+  const parentOf = (page: DesiredPage | DesiredFolder): Parent => {
     if (!page.parent) return { page: root }
     const existing = byKey.get(page.parent)
     return existing ? { page: existing.id } : { key: page.parent }
   }
   const ops: Op[] = []
   const findings: Finding[] = []
+  for (const folder of folders)
+    if (!byKey.has(folder.key))
+      ops.push({ kind: 'create', key: folder.key, title: folder.title, parent: parentOf(folder), folder: true })
   for (const page of desired) {
     const current = byKey.get(page.key)
     const parent = parentOf(page)
@@ -55,9 +71,16 @@ export function diff(
       findings.push(warning('plan/manual-edit', page.key, 1, `Page ${current.id} was edited in Confluence`))
     if (changes.length) ops.push({ kind: 'update', key: page.key, page: current.id, title: page.title, changes })
   }
-  const keys = new Set(desired.map(page => page.key))
-  for (const page of owned)
-    if (!keys.has(page.key)) ops.push({ kind: 'archive', key: page.key, page: page.id, title: page.title })
+  const keys = new Set([...desired, ...folders].map(item => item.key))
+  for (const item of owned)
+    if (!keys.has(item.key))
+      ops.push({
+        kind: 'archive',
+        key: item.key,
+        page: item.id,
+        title: item.title,
+        ...(item.type === 'folder' ? { folder: true as const } : {}),
+      })
   return { ops, findings }
 }
 
@@ -68,7 +91,7 @@ export function titleClashes(
 ): Finding[] {
   const ours = new Set(owned.map(page => page.id))
   return ops.flatMap(op => {
-    if (op.kind !== 'create' && !(op.kind === 'update' && op.changes.includes('title'))) return []
+    if (!(op.kind === 'create' && !op.folder) && !(op.kind === 'update' && op.changes.includes('title'))) return []
     const other = existing.get(op.title)
     return other && !ours.has(other)
       ? [error('plan/title-clash', op.key, 1, `Page ${other} in the space already has the title "${op.title}"`)]
@@ -80,9 +103,10 @@ export function classify(ops: readonly Op[], deviating: ReadonlySet<string>): Cl
   return ops.map(op => {
     switch (op.kind) {
       case 'create':
+        if (op.folder) return { op, risky: 'new folder' }
         return { op, risky: deviating.has(op.key) ? 'new page with deviates-from links' : 'new page' }
       case 'archive':
-        return { op, risky: 'archives a page' }
+        return { op, risky: op.folder ? 'deletes a folder' : 'archives a page' }
       case 'move':
         return { op, risky: 'moves a page' }
       case 'update':

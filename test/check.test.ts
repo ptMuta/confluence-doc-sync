@@ -9,6 +9,7 @@ const config = '.docs-sync/config.yaml'
 
 const base = `system: Payments
 confluence: { site: example.atlassian.net, space: DOCS, root-page: 1 }
+types: [decisions, requirements, security, logging, monitoring, writing-rules]
 `
 
 async function repo(files: Record<string, string>): Promise<string> {
@@ -125,6 +126,21 @@ describe('check', () => {
     expect(await rules({ [config]: long, 'docs/decisions/DEC-0001.md': decision('', sections) })).toEqual([
       'content/length',
     ])
+  })
+
+  it('accepts freeform docs when no types are opted in', async () => {
+    const plain = base.replace(/^types: .*\n/m, '')
+    const files = {
+      [config]: plain,
+      'docs/notes.md': 'Some notes without front matter.\n',
+      'docs/decisions/whatever.md': 'Not a decision record.\n',
+      'docs/logging.yaml': 'id: LOG-001',
+      'docs/a.md': '---\ntitle: A\n---\n\n## Empty\n',
+    }
+    expect(await rules(files)).toEqual([])
+    expect(await rules({ ...files, [config]: `${plain}types: [writing-rules]\n` })).toEqual(['content/empty-section'])
+    expect(await rules({ ...files, [config]: `${plain}types: [logging]\n` })).toEqual(['schema'])
+    expect(await rules({ ...files, [config]: `${plain}types: [decisions]\n` })).toEqual(['frontmatter'])
   })
 
   it('skips links that need no file check', async () => {

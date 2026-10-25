@@ -7,7 +7,7 @@ const external = z.string().regex(/^[a-z][a-z0-9-]*:\S+$/, 'Must be <source>:<id
 const local = z.string().regex(/^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*-\d+$/, 'Must be an id such as FR-001')
 const list = <T extends z.ZodType>(item: T) => z.array(item).min(1)
 
-export const pageSchema = z.strictObject({ title: text, tags: list(tag).optional() })
+export const pageSchema = z.strictObject({ title: text.optional(), tags: list(tag).optional() })
 
 export const decisionSchema = (prefix: string) => {
   const id = z.string().regex(new RegExp(`^${prefix}-\\d{4}$`), `Must look like ${prefix}-0001`)
@@ -26,7 +26,7 @@ export const decisionSchema = (prefix: string) => {
   })
 }
 
-export type PageMeta = z.output<typeof pageSchema>
+export type PageMeta = z.output<typeof pageSchema> & { readonly title: string }
 export type DecisionMeta = z.output<ReturnType<typeof decisionSchema>>
 
 const entry = <S extends z.ZodRawShape>(id: RegExp, example: string, shape: S) =>

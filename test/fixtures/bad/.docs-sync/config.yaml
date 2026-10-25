@@ -15,3 +15,4 @@ lint:
   budgets: { decision: 20, catalog-entry: 10, summary: 5 }
   filler: [synergy]
   deny-patterns: ['\b10\.\d+\.\d+\.\d+\b']
+types: [decisions, requirements, security, logging, monitoring, writing-rules]

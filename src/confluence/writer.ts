@@ -1,4 +1,5 @@
 import type { Node } from '../render/adf.ts'
+import type { Item } from './reader.ts'
 import { HttpError, ScopeError, type WriteHttp } from './http/client.ts'
 
 const q = encodeURIComponent
@@ -6,8 +7,10 @@ const maxPolls = 60
 
 export interface Writer {
   readonly createPage: (spaceId: string, parentId: string, title: string) => Promise<{ id: string; version: number }>
+  readonly createFolder: (spaceId: string, parentId: string, title: string) => Promise<string>
+  readonly deleteFolder: (id: string) => Promise<void>
   readonly updatePage: (id: string, title: string, body: Node, version: number) => Promise<number>
-  readonly setProperty: (pageId: string, key: string, value: unknown) => Promise<void>
+  readonly setProperty: (type: Item['type'], id: string, key: string, value: unknown) => Promise<void>
   readonly upload: (pageId: string, name: string, data: Buffer, comment: string) => Promise<void>
   readonly addLabels: (pageId: string, names: readonly string[]) => Promise<void>
   readonly removeLabel: (pageId: string, name: string) => Promise<void>
@@ -36,6 +39,11 @@ export function cloudWriter(http: WriteHttp, pause = wait): Writer {
       })
       return { id: page.id, version: page.version.number }
     },
+    createFolder: async (spaceId, parentId, title) =>
+      (await http.send<{ id: string }>('POST', '/api/v2/folders', { spaceId, title, parentId })).id,
+    deleteFolder: async id => {
+      await http.send('DELETE', `/api/v2/folders/${q(id)}`)
+    },
     updatePage: async (id, title, body, version) =>
       (
         await http.send<Page>('PUT', `/api/v2/pages/${q(id)}`, {
@@ -46,8 +54,8 @@ export function cloudWriter(http: WriteHttp, pause = wait): Writer {
           version: { number: version, message: 'docs-sync' },
         })
       ).version.number,
-    setProperty: async (pageId, key, value) => {
-      const path = `/api/v2/pages/${q(pageId)}/properties`
+    setProperty: async (type, id, key, value) => {
+      const path = `/api/v2/${type}s/${q(id)}/properties`
       const [current] = (await http.get<{ results: Page[] }>(`${path}?key=${q(key)}`)).results
       if (current)
         await http.send('PUT', `${path}/${q(current.id)}`, {
@@ -113,9 +121,14 @@ const probes: readonly [string, (http: WriteHttp) => Promise<unknown>][] = [
   ['read:content.metadata:confluence', http => http.get('/rest/api/longtask/0')],
 ]
 
-export async function missingWriteScopes(http: WriteHttp): Promise<string[]> {
+const folderProbes: readonly [string, (http: WriteHttp) => Promise<unknown>][] = [
+  ['write:folder:confluence', http => http.send('POST', '/api/v2/folders', {})],
+  ['delete:folder:confluence', http => http.send('DELETE', '/api/v2/folders/0')],
+]
+
+export async function missingWriteScopes(http: WriteHttp, folders: boolean): Promise<string[]> {
   const missing = await Promise.all(
-    probes.map(async ([scope, probe]) => {
+    [...probes, ...(folders ? folderProbes : [])].map(async ([scope, probe]) => {
       try {
         await probe(http)
         return undefined

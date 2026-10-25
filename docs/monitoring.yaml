@@ -1,0 +1,27 @@
+- id: MON-001
+  symptom: Docs on main stop reaching Confluence.
+  signal: https://github.com/ptMuta/git-confluence-sync/actions/workflows/docs-sync.yml
+  severity: high
+  route: GitHub notifications to ptMuta
+  runbook: docs/operations.md
+  covers: [FR-002, FR-003]
+- id: MON-002
+  symptom: The Confluence tokens expired or lost a scope.
+  signal: https://github.com/ptMuta/git-confluence-sync/actions/workflows/live-test.yml
+  severity: high
+  route: GitHub notifications to ptMuta
+  runbook: docs/operations.md
+  covers: [NFR-REL-001]
+- id: MON-003
+  symptom: The nightly release fails to build, scan or publish.
+  signal: https://github.com/ptMuta/git-confluence-sync/actions/workflows/release.yml
+  severity: medium
+  route: GitHub notifications to ptMuta
+  runbook: docs/operations.md
+  covers: [NFR-SEC-005]
+- id: MON-004
+  symptom: CI fails on main.
+  signal: https://github.com/ptMuta/git-confluence-sync/actions/workflows/ci.yml
+  severity: medium
+  route: GitHub notifications to ptMuta
+  covers: [NFR-QUA-001]

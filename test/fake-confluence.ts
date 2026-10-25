@@ -149,11 +149,25 @@ export class FakeConfluence {
         type: 'page',
         title: json['title'] as string,
         parentId: String(json['parentId']),
-        parentType: 'page',
+        parentType: this.items.get(String(json['parentId']))?.type ?? 'page',
         version: 1,
         body: json['body'],
       })
       return { id, version: { number: 1 } }
+    }
+    if (method === 'POST' && p === '/api/v2/folders') {
+      if (!json['title']) throw new HttpError(400, path, 'invalid', method)
+      const id = String(this.next++)
+      const parentId = String(json['parentId'])
+      this.add({ id, type: 'folder', title: json['title'] as string, parentId, parentType: this.page(parentId).type })
+      return { id }
+    }
+    if (method === 'DELETE' && (m = /^\/api\/v2\/folders\/(\d+)$/.exec(p))) {
+      const id = this.page(m[1] ?? '').id
+      for (const other of [...this.items.values()]) if (this.under(other.id, id)) this.items.delete(other.id)
+      this.items.delete(id)
+      this.archived.add(id)
+      return {}
     }
     if (method === 'PUT' && (m = /^\/api\/v2\/pages\/(\d+)$/.exec(p))) {
       const item = this.page(m[1] ?? '')
@@ -161,7 +175,7 @@ export class FakeConfluence {
       Object.assign(item, { title: json['title'], body: json['body'], version: json.version.number })
       return { id: item.id, version: { number: item.version } }
     }
-    if ((m = /^\/api\/v2\/pages\/(\d+)\/properties/.exec(p))) {
+    if ((m = /^\/api\/v2\/(?:page|folder)s\/(\d+)\/properties/.exec(p))) {
       const item = this.page(m[1] ?? '')
       item.marker = json.value
       item.markerVersion = json.version?.number ?? 1
@@ -207,6 +221,8 @@ export class FakeConfluence {
     if (method === 'GET') return scopeFor(path)
     if (path.includes('/attachment')) return 'write:attachment:confluence'
     if (path.includes('/label')) return 'write:label:confluence'
+    if (path.startsWith('/api/v2/folders'))
+      return method === 'DELETE' ? 'delete:folder:confluence' : 'write:folder:confluence'
     return 'write:page:confluence'
   }
 
