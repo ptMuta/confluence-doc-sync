@@ -55,4 +55,4 @@ Keep DOCS_SYNC_OWNERSHIP_KEY the same in every publish environment. Rotation is 
 
 ## Live test
 
-The live-test workflow runs plan and publish against the test site, including refusals and draw.io macros, then archives its test pages. Run it after changes to the Confluence client or the publish checks.
+The live-test workflow runs plan and publish against the test site, including refusals and draw.io macros, then archives its test pages. Its credentials live in the live-test environment, which requires a reviewer. Run it after changes to the Confluence client or the publish checks.
