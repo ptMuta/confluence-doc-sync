@@ -32,4 +32,4 @@ outputs:
     description: low or high
 runs:
   using: docker
-  image: Dockerfile
+  image: docker://ghcr.io/ptmuta/confluence-doc-sync@sha256:30c566874221c74085ed6204d0df4594a74ed7d42bd0bd59bd929b73feae6365
